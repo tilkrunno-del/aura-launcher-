@@ -80,4 +80,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 Created by **Runno Tilk**  
 Estonia 🇪🇪
 
-Apache-2.0. See `LICENSE`.
