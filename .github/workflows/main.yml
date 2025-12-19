@@ -1,0 +1,5 @@
+- name: Install Gradle
+  run: sudo apt-get install gradle -y
+
+- name: Build Debug APK
+  run: gradle assembleDebug
