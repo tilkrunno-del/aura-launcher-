@@ -1,0 +1,3 @@
+- name: Build Debug APK
+  working-directory: aura-launcher
+  run: gradle assembleDebug
