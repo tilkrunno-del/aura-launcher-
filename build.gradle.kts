@@ -1,0 +1,3 @@
+plugins {
+    // Module handles plugins
+}
