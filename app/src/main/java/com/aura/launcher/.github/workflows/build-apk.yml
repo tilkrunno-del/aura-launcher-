@@ -1,0 +1,32 @@
+name: Build Debug APK
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@0a1c1c8c7d5f2d75c6a2b7b6a14fda0f2d43fbb3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/gradle-build-action@6099dbf68c51a0c1c9adf6e8c2f74a1a3c0e5f33
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@5d5d22f8b1d4c64e8d8f07cb9f2bceaa0f8c9e7c
+        with:
+          name: aura-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
