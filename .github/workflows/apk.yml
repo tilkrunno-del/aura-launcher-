@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
 
-      - uses: actions/setup-java@d854c75a1a2b0d5f4fcb4ce8b063d6d5a41f7f99
+      - uses: actions/setup-java@5f0f45e3a4f2b4a9b5eebf6e9e2a9b44c6fcdcf2
         with:
           distribution: 'temurin'
           java-version: '17'
