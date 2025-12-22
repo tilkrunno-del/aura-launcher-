@@ -1,3 +1,4 @@
 plugins {
-    // Module handles plugins
+    id("com.android.application")
+    kotlin("android")
 }
