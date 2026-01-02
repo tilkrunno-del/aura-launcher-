@@ -103,8 +103,7 @@ set -- \
         org.gradle.wrapper.GradleWrapperMain \
         "$@"
 
-
-exec "$JAVACMD" \
+exec "$JAVACMD" $DEFAULT_JVM_OPTS \
   -classpath "$CLASSPATH" \
   org.gradle.wrapper.GradleWrapperMain \
   "$@"
