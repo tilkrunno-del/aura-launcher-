@@ -1,4 +1,4 @@
-package com.tilkrunno.aura_launcher   // ⚠️ PEAB olema sama mis MainActivity.kt
+package com.tilkrunno.aura_launcher   // 
 
 import android.content.pm.ResolveInfo
 import android.view.LayoutInflater
