@@ -1,4 +1,4 @@
-package YOUR.PACKAGE.NAME
+package com.tilkrunno.aura_launcher   // ⚠️ PEAB olema sama mis MainActivity.kt
 
 import android.content.pm.ResolveInfo
 import android.view.LayoutInflater
@@ -21,7 +21,8 @@ class AppsAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_app, parent, false)
+        val v = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_app, parent, false)
         return VH(v)
     }
 
