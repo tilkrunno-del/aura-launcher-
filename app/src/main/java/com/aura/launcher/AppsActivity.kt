@@ -9,46 +9,50 @@ import androidx.recyclerview.widget.RecyclerView
 
 class AppsActivity : AppCompatActivity() {
 
-    data class AppItem(
-        val label: String,
-        val packageName: String
-    )
+  data class AppItem(
+    val label: String,
+    val packageName: String,
+    val className: String?
+  )
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_apps)
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContentView(R.layout.activity_apps)
 
-        val recycler = findViewById<RecyclerView>(R.id.recyclerApps)
-        recycler.layoutManager = LinearLayoutManager(this)
+    val recycler = findViewById<RecyclerView>(R.id.recyclerApps)
+    recycler.layoutManager = LinearLayoutManager(this)
 
-        val apps = loadLaunchableApps()
-        recycler.adapter = AppsAdapter(apps) { item ->
-            launchApp(item.packageName)
-        }
+    val apps = loadApps()
+    recycler.adapter = AppsAdapter(apps) { item ->
+      launchApp(item)
+    }
+  }
+
+  private fun loadApps(): List<AppItem> {
+    val pm = packageManager
+    val intent = Intent(Intent.ACTION_MAIN, null).apply {
+      addCategory(Intent.CATEGORY_LAUNCHER)
     }
 
-    private fun loadLaunchableApps(): List<AppItem> {
-        val pm = packageManager
+    val results = pm.queryIntentActivities(intent, PackageManager.MATCH_ALL)
 
-        val intent = Intent(Intent.ACTION_MAIN, null).apply {
-            addCategory(Intent.CATEGORY_LAUNCHER)
-        }
+    return results
+      .map { ri ->
+        AppItem(
+          label = ri.loadLabel(pm)?.toString() ?: ri.activityInfo.packageName,
+          packageName = ri.activityInfo.packageName,
+          className = ri.activityInfo.name
+        )
+      }
+      .sortedBy { it.label.lowercase() }
+  }
 
-        val resolved = pm.queryIntentActivities(intent, PackageManager.MATCH_ALL)
-
-        return resolved
-            .map { ri ->
-                val label = ri.loadLabel(pm)?.toString() ?: ri.activityInfo.packageName
-                AppItem(label = label, packageName = ri.activityInfo.packageName)
-            }
-            .sortedBy { it.label.lowercase() }
+  private fun launchApp(item: AppItem) {
+    val intent = Intent(Intent.ACTION_MAIN).apply {
+      addCategory(Intent.CATEGORY_LAUNCHER)
+      setClassName(item.packageName, item.className ?: return)
+      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
-
-    private fun launchApp(packageName: String) {
-        val pm = packageManager
-        val launchIntent = pm.getLaunchIntentForPackage(packageName)
-        if (launchIntent != null) {
-            startActivity(launchIntent)
-        }
-    }
+    startActivity(intent)
+  }
 }
