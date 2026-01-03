@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.aura.launcher">
 
     <application
-        android:label="AURA Launcher">
+        android:allowBackup="true"
+        android:label="AURA Launcher"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Aura">
 
+        <!-- HOME / LAUNCHER ACTIVITY -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:excludeFromRecents="true">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
