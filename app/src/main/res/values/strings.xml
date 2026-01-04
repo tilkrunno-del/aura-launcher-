@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">AURA Launcher</string>
+    <string name="open_apps">AVA RAKENDUSED</string>
+    <string name="apps_title">Rakendused</string>
 </resources>
