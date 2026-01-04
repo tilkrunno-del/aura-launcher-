@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Põhivärvid -->
+    <color name="aura_background">#FFFFFF</color>
+    <color name="aura_surface">#F5F5F5</color>
+    <color name="aura_text_primary">#222222</color>
+    <color name="aura_text_secondary">#666666</color>
+
+    <!-- Aktsent -->
+    <color name="aura_accent">#3F51B5</color>
+
+</resources>
