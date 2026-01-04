@@ -1,30 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/homeRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center_horizontal"
-    android:background="@color/aura_background"
+    android:gravity="center"
     android:padding="24dp">
 
     <TextView
-        android:id="@+id/txtTitle"
+        android:id="@+id/tvHint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textStyle="bold"
-        android:textSize="28sp"
-        android:textColor="@color/aura_text_primary"
-        android:layout_marginBottom="24dp" />
+        android:text="Swipe üles → Rakendused"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <Button
         android:id="@+id/btnOpenApps"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:text="@string/open_apps"
-        android:textStyle="bold"
-        android:textAllCaps="true"
-        android:textColor="@color/aura_text_primary"
-        android:backgroundTint="@color/aura_divider" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ava rakendused"
+        android:layout_marginTop="16dp" />
 
 </LinearLayout>
