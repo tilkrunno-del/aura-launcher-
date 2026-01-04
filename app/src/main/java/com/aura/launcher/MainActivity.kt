@@ -2,58 +2,42 @@ package com.aura.launcher
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.GestureDetector
-import android.view.MotionEvent
+import android.provider.Settings
 import android.widget.Button
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
-
-    private lateinit var gestureDetector: GestureDetector
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Nupp (jätame alles, kui sul on activity_main.xml-is olemas)
-        findViewById<Button?>(R.id.btnOpenApps)?.setOnClickListener {
-            openApps()
+        val searchInput = findViewById<EditText>(R.id.searchInput)
+
+        // Ava rakendused nupp
+        findViewById<Button>(R.id.btnOpenApps).setOnClickListener {
+            openApps(searchInput.text?.toString())
         }
 
-        // Swipe üles -> AppsActivity
-        gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
-            private val SWIPE_THRESHOLD = 100
-            private val SWIPE_VELOCITY_THRESHOLD = 100
+        // Määra vaikimisi launcher
+        findViewById<Button>(R.id.btnSetDefaultLauncher).setOnClickListener {
+            startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
+        }
 
-            override fun onFling(
-                e1: MotionEvent?,
-                e2: MotionEvent,
-                velocityX: Float,
-                velocityY: Float
-            ): Boolean {
-                if (e1 == null) return false
-
-                val diffY = e2.y - e1.y
-                val diffX = e2.x - e1.x
-
-                // Väldi horisontaalset swipi
-                if (kotlin.math.abs(diffY) > kotlin.math.abs(diffX)) {
-                    // üles: diffY negatiivne
-                    if (diffY < -SWIPE_THRESHOLD && kotlin.math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
-                        openApps()
-                        return true
-                    }
-                }
-                return false
-            }
-        })
+        // Kui kasutaja vajutab Enter/Search klaviatuuril -> ava AppsActivity kohe
+        searchInput.setOnEditorActionListener { _, _, _ ->
+            openApps(searchInput.text?.toString())
+            true
+        }
     }
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event)
-    }
-
-    private fun openApps() {
-        startActivity(Intent(this, AppsActivity::class.java))
+    private fun openApps(query: String?) {
+        val intent = Intent(this, AppsActivity::class.java)
+        val q = query?.trim().orEmpty()
+        if (q.isNotEmpty()) {
+            intent.putExtra(AppsActivity.EXTRA_QUERY, q)
+        }
+        startActivity(intent)
     }
 }
