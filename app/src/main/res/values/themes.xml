@@ -1,22 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- AURA Launcher põhiteema -->
-    <style name="Theme.AuraLauncher" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Põhivärvid -->
-        <item name="colorPrimary">#000000</item>
-        <item name="colorPrimaryDark">#000000</item>
-        <item name="colorAccent">#00E5FF</item>
+    <!-- AURA teema -->
+    <style name="Theme.AuraLauncher" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Värvid -->
+        <item name="colorPrimary">@color/aura_accent</item>
+        <item name="colorPrimaryVariant">@color/aura_accent</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+
+        <item name="colorSecondary">@color/aura_accent</item>
+        <item name="colorSecondaryVariant">@color/aura_accent</item>
+        <item name="colorOnSecondary">@android:color/white</item>
+
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/white</item>
 
         <!-- Taust -->
-        <item name="android:windowBackground">#FFFFFF</item>
+        <item name="android:windowBackground">@color/aura_background</item>
 
-        <!-- Status bar -->
-        <item name="android:statusBarColor">#000000</item>
+        <!-- Font (default) -->
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
 
-        <!-- ActionBar puudub -->
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+    <!-- Pealkiri tekst -->
+    <style name="AuraText.Title">
+        <item name="android:textColor">@color/aura_text_primary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">26sp</item>
+    </style>
+
+    <!-- Sekundaarne tekst -->
+    <style name="AuraText.Subtitle">
+        <item name="android:textColor">@color/aura_text_secondary</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <!-- Nupu stiil -->
+    <style name="AuraButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:textAllCaps">false</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
     </style>
 
 </resources>
