@@ -1,27 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.aura.launcher">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
         android:allowBackup="true"
-        android:label="@string/app_name"
+        android:label="AURA Launcher"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AuraLauncher">
 
-        <!-- PÕHILAUNCHER -->
+        <!-- PÕHILAUNCHER / HOME -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
+
+            <!-- See teeb AURA-st Home/Launcher valiku -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+
+            <!-- See jätab äpplistis ikooni alles (et saaks avada/testida) -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
         </activity>
 
-        <!-- RAKENDUSTE LOEND -->
+        <!-- Rakenduste loend -->
         <activity
             android:name=".AppsActivity"
             android:exported="false" />
