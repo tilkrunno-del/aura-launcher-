@@ -1,21 +1,23 @@
 package com.aura.launcher
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.KeyEvent
-import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.core.widget.doAfterTextChanged
+import androidx.core.widget.addTextChangedListener
 
 class AppsActivity : AppCompatActivity() {
 
     private lateinit var recycler: RecyclerView
-    private lateinit var search: EditText
     private lateinit var adapter: AppsAdapter
+    private lateinit var editSearch: EditText
+    private lateinit var btnClear: ImageButton
 
     private var allApps: List<AppInfo> = emptyList()
 
@@ -24,60 +26,41 @@ class AppsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_apps)
 
         recycler = findViewById(R.id.recyclerApps)
-        search = findViewById(R.id.editSearch)
+        editSearch = findViewById(R.id.editSearch)
+        btnClear = findViewById(R.id.btnClearSearch)
 
         recycler.layoutManager = LinearLayoutManager(this)
 
-        adapter = AppsAdapter { app ->
+        allApps = loadLaunchableApps()
+
+        adapter = AppsAdapter(allApps) { app ->
             launchApp(app.packageName)
         }
         recycler.adapter = adapter
 
-        allApps = loadLaunchableApps()
-        adapter.submitList(allApps)
+        // Otsingu muutumisel: filtreeri + X nähtavus + scroll üles
+        editSearch.addTextChangedListener { text ->
+            val q = text?.toString()?.trim()?.lowercase() ?: ""
+            btnClear.isVisible = q.isNotEmpty()
 
-        // ✅ AUTOFOKUS + KLAVIATUUR
-        search.requestFocus()
-        search.post {
-            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showSoftInput(search, InputMethodManager.SHOW_IMPLICIT)
-        }
-
-        // ✅ LIVE FILTER
-        search.doAfterTextChanged { text ->
-            val q = text?.toString()?.trim()?.lowercase().orEmpty()
             val filtered = if (q.isEmpty()) {
                 allApps
             } else {
                 allApps.filter { app ->
-                    app.label.lowercase().contains(q) ||
-                            app.packageName.lowercase().contains(q)
+                    app.label.lowercase().contains(q) || app.packageName.lowercase().contains(q)
                 }
             }
-            adapter.submitList(filtered)
+
+            adapter.updateApps(filtered)
+            recycler.scrollToPosition(0)
         }
 
-        // ✅ ENTER / SEARCH -> AVA ESIMENE TULEMUS
-        search.setOnEditorActionListener { _, actionId, event ->
-            val isEnter =
-                actionId == EditorInfo.IME_ACTION_SEARCH ||
-                actionId == EditorInfo.IME_ACTION_DONE ||
-                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
-
-            if (isEnter) {
-                val first = adapter.getFirstOrNull()
-                if (first != null) launchApp(first.packageName)
-                true
-            } else {
-                false
-            }
-        }
-    }
-
-    private fun launchApp(packageName: String) {
-        val intent = packageManager.getLaunchIntentForPackage(packageName)
-        if (intent != null) {
-            startActivity(intent)
+        // X (clear) nupp
+        btnClear.setOnClickListener {
+            editSearch.setText("")
+            editSearch.clearFocus()
+            hideKeyboard()
+            recycler.scrollToPosition(0)
         }
     }
 
@@ -86,15 +69,26 @@ class AppsActivity : AppCompatActivity() {
         val intent = Intent(Intent.ACTION_MAIN, null).apply {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }
+
         val resolved = pm.queryIntentActivities(intent, 0)
 
-        val apps = resolved.map { ri ->
-            val label = ri.loadLabel(pm).toString()
-            val pkg = ri.activityInfo.packageName
+        return resolved.map { ri ->
+            val label = ri.loadLabel(pm)?.toString() ?: ri.activityInfo.packageName
+            val packageName = ri.activityInfo.packageName
             val icon = ri.loadIcon(pm)
-            AppInfo(label = label, packageName = pkg, icon = icon)
-        }
+            AppInfo(label = label, packageName = packageName, icon = icon)
+        }.sortedBy { it.label.lowercase() }
+    }
 
-        return apps.sortedBy { it.label.lowercase() }
+    private fun launchApp(packageName: String) {
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+        if (launchIntent != null) {
+            startActivity(launchIntent)
+        }
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(editSearch.windowToken, 0)
     }
 }
