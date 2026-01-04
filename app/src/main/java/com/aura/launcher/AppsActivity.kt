@@ -1,20 +1,12 @@
 package com.aura.launcher
 
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class AppsActivity : AppCompatActivity() {
-
-    data class AppInfo(
-        val label: String,
-        val packageName: String,
-        val icon: Drawable
-    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,21 +28,21 @@ class AppsActivity : AppCompatActivity() {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }
 
-        val resolved = pm.queryIntentActivities(intent, PackageManager.MATCH_ALL)
+        val resolved = pm.queryIntentActivities(intent, 0)
 
-        return resolved
-            .map { ri ->
-                val label = ri.loadLabel(pm)?.toString() ?: ri.activityInfo.packageName
-                val pkg = ri.activityInfo.packageName
-                val icon = ri.loadIcon(pm)
-                AppInfo(label = label, packageName = pkg, icon = icon)
-            }
-            .distinctBy { it.packageName }
-            .sortedBy { it.label.lowercase() }
+        return resolved.map {
+            AppInfo(
+                label = it.loadLabel(pm).toString(),
+                packageName = it.activityInfo.packageName,
+                icon = it.loadIcon(pm)
+            )
+        }.sortedBy { it.label.lowercase() }
     }
 
     private fun launchApp(packageName: String) {
-        val pm = packageManager
-        val launchIntent = pm.getLaunchIntentForPackage(packageName)
-        if (launchIntent != null) {
-            launchIntent
+        val intent = packageManager.getLaunchIntentForPackage(packageName)
+        if (intent != null) {
+            startActivity(intent)
+        }
+    }
+}
