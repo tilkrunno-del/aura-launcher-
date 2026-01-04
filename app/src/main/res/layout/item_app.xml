@@ -3,13 +3,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="12dp"
-    android:gravity="center_vertical">
+    android:gravity="center_vertical"
+    android:padding="16dp">
 
     <ImageView
         android:id="@+id/imgIcon"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
         android:contentDescription="App icon" />
 
     <TextView
@@ -17,8 +17,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="14dp"
         android:text="App"
-        android:textSize="16sp" />
+        android:textSize="18sp"
+        android:textColor="@color/aura_text_primary" />
 
 </LinearLayout>
