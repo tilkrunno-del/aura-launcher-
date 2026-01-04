@@ -6,15 +6,28 @@
         android:allowBackup="true"
         android:label="AURA Launcher"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-        <!-- Launcher (HOME) -->
+        <!-- MAIN / HOME launcher -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.HOME"
+
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Apps list screen -->
+        <activity
+            android:name=".AppsActivity"
+            android:exported="false" />
+
+    </application>
+
+</manifest>
