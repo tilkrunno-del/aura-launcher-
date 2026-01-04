@@ -1,19 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootApps"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="12dp">
 
-    <androidx.appcompat.widget.SearchView
-        android:id="@+id/searchApps"
+    <TextView
+        android:id="@+id/txtTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:queryHint="Otsi rakendust…"
-        android:iconifiedByDefault="false"
+        android:text="Rakendused"
+        android:textStyle="bold"
+        android:textSize="24sp"
+        android:padding="8dp" />
+
+    <EditText
+        android:id="@+id/editSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Otsi rakendust…"
         android:imeOptions="actionSearch"
         android:inputType="text"
-        android:padding="12dp" />
+        android:singleLine="true"
+        android:padding="10dp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerApps"
