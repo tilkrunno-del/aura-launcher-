@@ -1,6 +1,7 @@
 package com.aura.launcher
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,20 +29,29 @@ class AppsActivity : AppCompatActivity() {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }
 
-        val resolved = pm.queryIntentActivities(intent, 0)
+        val resolved = pm.queryIntentActivities(intent, PackageManager.MATCH_ALL)
 
-        return resolved.map {
-            AppInfo(
-                label = it.loadLabel(pm).toString(),
-                packageName = it.activityInfo.packageName,
-                icon = it.loadIcon(pm)
-            )
-        }.sortedBy { it.label.lowercase() }
+        // Väike filter: jätame välja asjad, millel pole launch intenti
+        val list = resolved.mapNotNull { ri ->
+            val pkg = ri.activityInfo.packageName
+            val launchIntent = pm.getLaunchIntentForPackage(pkg) ?: return@mapNotNull null
+
+            val label = ri.loadLabel(pm)?.toString() ?: pkg
+            val icon = ri.loadIcon(pm)
+
+            AppInfo(label = label, packageName = pkg, icon = icon)
+        }
+
+        return list
+            .distinctBy { it.packageName }
+            .sortedBy { it.label.lowercase() }
     }
 
     private fun launchApp(packageName: String) {
-        val intent = packageManager.getLaunchIntentForPackage(packageName)
+        val pm = packageManager
+        val intent = pm.getLaunchIntentForPackage(packageName)
         if (intent != null) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
         }
     }
