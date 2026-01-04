@@ -13,14 +13,14 @@ class AppsAdapter(
 ) : RecyclerView.Adapter<AppsAdapter.VH>() {
 
     class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val title: TextView = itemView.findViewById(R.id.textTitle)
         val icon: ImageView = itemView.findViewById(R.id.imgIcon)
+        val title: TextView = itemView.findViewById(R.id.textTitle)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val view = LayoutInflater.from(parent.context)
+        val v = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_app, parent, false)
-        return VH(view)
+        return VH(v)
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
