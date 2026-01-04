@@ -8,39 +8,36 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class AppsAdapter(
+    private var apps: List<AppInfo>,
     private val onClick: (AppInfo) -> Unit
-) : RecyclerView.Adapter<AppsAdapter.VH>() {
+) : RecyclerView.Adapter<AppsAdapter.AppViewHolder>() {
 
-    private val items: MutableList<AppInfo> = mutableListOf()
-
-    fun submitList(newItems: List<AppInfo>) {
-        items.clear()
-        items.addAll(newItems)
+    fun updateApps(newApps: List<AppInfo>) {
+        apps = newApps
         notifyDataSetChanged()
     }
 
-    fun getFirstOrNull(): AppInfo? = items.firstOrNull()
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_app, parent, false)
-        return VH(v)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_app, parent, false)
+        return AppViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: VH, position: Int) {
-        val app = items[position]
+    override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
+        val app = apps[position]
         holder.bind(app)
         holder.itemView.setOnClickListener { onClick(app) }
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun getItemCount(): Int = apps.size
 
-    class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val imgIcon: ImageView = itemView.findViewById(R.id.imgIcon)
-        private val txtTitle: TextView = itemView.findViewById(R.id.textTitle)
+    class AppViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val icon: ImageView = itemView.findViewById(R.id.imgIcon)
+        private val title: TextView = itemView.findViewById(R.id.textTitle)
 
         fun bind(app: AppInfo) {
-            imgIcon.setImageDrawable(app.icon)
-            txtTitle.text = app.label
+            icon.setImageDrawable(app.icon)
+            title.text = app.label
         }
     }
 }
