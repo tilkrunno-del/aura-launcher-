@@ -1,6 +1,43 @@
-<Button
-    android:id="@+id/btnSetDefaultLauncher"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:text="Määra AURA vaikimisi avakuvarakenduseks"
-    android:layout_margin="16dp"/>
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Otsinguriba -->
+    <EditText
+        android:id="@+id/searchInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Otsi rakendust"
+        android:inputType="text"
+        android:imeOptions="actionSearch"
+        android:drawableEnd="@android:drawable/ic_menu_search"
+        android:padding="12dp" />
+
+    <!-- Väike vahe -->
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="12dp" />
+
+    <!-- Ava rakenduste nimekiri -->
+    <Button
+        android:id="@+id/btnOpenApps"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ava rakendused" />
+
+    <!-- Väike vahe -->
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="12dp" />
+
+    <!-- Määra vaikimisi launcher -->
+    <Button
+        android:id="@+id/btnSetDefaultLauncher"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Määra AURA vaikimisi avakuvarakenduseks" />
+
+</LinearLayout>
