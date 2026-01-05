@@ -1,11 +1,76 @@
-try {
-    val intent = packageManager.getLaunchIntentForPackage(app.packageName)
-    if (intent != null) {
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(intent)
-    } else {
-        Toast.makeText(this, "Ei saa avada: ${app.label}", Toast.LENGTH_SHORT).show()
+package com.aura.launcher
+
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Bundle
+import android.widget.EditText
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+
+class AppsActivity : AppCompatActivity() {
+
+    companion object {
+        const val EXTRA_QUERY = "EXTRA_QUERY"
     }
-} catch (e: Exception) {
-    Toast.makeText(this, "Viga: ${e.message}", Toast.LENGTH_LONG).show()
+
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var searchEditText: EditText
+    private lateinit var adapter: AppsAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_apps)
+
+        recyclerView = findViewById(R.id.appsRecyclerView)
+        searchEditText = findViewById(R.id.searchEditText)
+
+        recyclerView.layoutManager = LinearLayoutManager(this)
+
+        val apps = loadInstalledApps(packageManager)
+
+        adapter = AppsAdapter(apps) { app ->
+            val launchIntent =
+                packageManager.getLaunchIntentForPackage(app.packageName)
+
+            if (launchIntent != null) {
+                startActivity(launchIntent)
+            } else {
+                Toast.makeText(
+                    this,
+                    "Ei saa avada: ${app.label}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+        recyclerView.adapter = adapter
+
+        val query = intent.getStringExtra(EXTRA_QUERY).orEmpty()
+        if (query.isNotBlank()) {
+            searchEditText.setText(query)
+            adapter.filterApps(query)
+        }
+
+        searchEditText.addTextChangedListener {
+            adapter.filterApps(it.toString())
+        }
+    }
+
+    private fun loadInstalledApps(pm: PackageManager): List<AppInfo> {
+        val intent = Intent(Intent.ACTION_MAIN, null).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
+        }
+
+        val apps = pm.queryIntentActivities(intent, 0)
+
+        return apps.map {
+            AppInfo(
+                label = it.loadLabel(pm).toString(),
+                packageName = it.activityInfo.packageName,
+                icon = it.loadIcon(pm)
+            )
+        }.sortedBy { it.label.lowercase() }
+    }
 }
