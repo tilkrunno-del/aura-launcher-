@@ -3,6 +3,8 @@ package com.aura.launcher
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,9 +19,9 @@ class AppsActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchEditText: EditText
-
     private lateinit var adapter: AppsAdapter
-    private val allApps: MutableList<AppInfo> = mutableListOf()
+
+    private val allApps = mutableListOf<AppInfo>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,10 +36,22 @@ class AppsActivity : AppCompatActivity() {
         allApps.addAll(loadInstalledApps(packageManager))
 
         adapter = AppsAdapter(allApps) { app ->
-            launchApp(app)
+            try {
+                val launchIntent =
+                    packageManager.getLaunchIntentForPackage(app.packageName)
+                if (launchIntent != null) {
+                    startActivity(launchIntent)
+                } else {
+                    Toast.makeText(this, "Ei saa avada: ${app.label}", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this, "Viga: ${app.label}", Toast.LENGTH_SHORT).show()
+            }
         }
+
         recyclerView.adapter = adapter
 
+        // Kui tuli otsing MainActivity-st
         val initialQuery = intent.getStringExtra(EXTRA_QUERY).orEmpty()
         if (initialQuery.isNotBlank()) {
             searchEditText.setText(initialQuery)
@@ -45,23 +59,16 @@ class AppsActivity : AppCompatActivity() {
             adapter.filterApps(initialQuery)
         }
 
-        // Lihtsam ja kindel: doAfterTextChanged (pole TextWatcher jamasid)
-        searchEditText.addTextChangedListener(SimpleTextWatcher { text ->
-            adapter.filterApps(text)
-        })
-    }
+        // ✅ TAVALINE TextWatcher – EI MINGIT SimpleTextWatcherit
+        searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
-    private fun launchApp(app: AppInfo) {
-        try {
-            val intent = Intent(Intent.ACTION_MAIN).apply {
-                addCategory(Intent.CATEGORY_LAUNCHER)
-                setClassName(app.packageName, app.className)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                adapter.filterApps(s?.toString().orEmpty())
             }
-            startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Ei saa avada: ${app.label}", Toast.LENGTH_SHORT).show()
-        }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
     }
 
     private fun loadInstalledApps(pm: PackageManager): List<AppInfo> {
@@ -71,12 +78,12 @@ class AppsActivity : AppCompatActivity() {
 
         val resolved = pm.queryIntentActivities(intent, 0)
 
-        return resolved.map { ri ->
-            val label = ri.loadLabel(pm)?.toString() ?: ri.activityInfo.packageName
-            val pkg = ri.activityInfo.packageName
-            val cls = ri.activityInfo.name  // <-- oluline!
-            val icon = ri.loadIcon(pm)
-            AppInfo(label = label, packageName = pkg, className = cls, icon = icon)
+        return resolved.map {
+            AppInfo(
+                label = it.loadLabel(pm).toString(),
+                packageName = it.activityInfo.packageName,
+                icon = it.loadIcon(pm)
+            )
         }.sortedBy { it.label.lowercase() }
     }
 }
