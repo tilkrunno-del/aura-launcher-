@@ -9,41 +9,42 @@ import androidx.recyclerview.widget.RecyclerView
 import java.util.Locale
 
 class AppsAdapter(
-    private val allApps: List<AppInfo>,
-    private val onAppClick: (AppInfo) -> Unit
-) : RecyclerView.Adapter<AppsAdapter.VH>() {
+    private val originalApps: List<AppInfo>,
+    private val onClick: (AppInfo) -> Unit
+) : RecyclerView.Adapter<AppsAdapter.ViewHolder>() {
 
-    private val shownApps = allApps.toMutableList()
+    private val filteredApps = originalApps.toMutableList()
 
-    class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val icon: ImageView = itemView.findViewById(R.id.appIcon)
-        val name: TextView = itemView.findViewById(R.id.appName)
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val icon: ImageView = view.findViewById(R.id.appIcon)
+        val name: TextView = view.findViewById(R.id.appName)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_app, parent, false)
-        return VH(v)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_app, parent, false)
+        return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: VH, position: Int) {
-        val app = shownApps[position]
+    override fun getItemCount(): Int = filteredApps.size
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val app = filteredApps[position]
         holder.icon.setImageDrawable(app.icon)
         holder.name.text = app.label
-        holder.itemView.setOnClickListener { onAppClick(app) }
+        holder.itemView.setOnClickListener { onClick(app) }
     }
 
-    override fun getItemCount(): Int = shownApps.size
-
     fun filterApps(query: String) {
-        val q = query.trim().lowercase(Locale.getDefault())
-        shownApps.clear()
+        val q = query.lowercase(Locale.getDefault())
+        filteredApps.clear()
+
         if (q.isEmpty()) {
-            shownApps.addAll(allApps)
+            filteredApps.addAll(originalApps)
         } else {
-            shownApps.addAll(
-                allApps.filter {
-                    it.label.lowercase(Locale.getDefault()).contains(q) ||
-                            it.packageName.lowercase(Locale.getDefault()).contains(q)
+            filteredApps.addAll(
+                originalApps.filter {
+                    it.label.lowercase(Locale.getDefault()).contains(q)
                 }
             )
         }
