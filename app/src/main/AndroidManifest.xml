@@ -1,24 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.aura.launcher">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Vajalik, et näha ja avada teisi appe Android 11+ -->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent>
-    </queries>
+    <!-- Android 11+ jaoks: et saaks installitud äppe listida -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
     <application
         android:allowBackup="true"
-        android:label="AURA Launcher"
+        android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
         android:theme="@style/Theme.AuraLauncher">
 
-        <!-- PEAMINE LAUNCHER -->
+        <!-- Launcher (HOME) activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -26,14 +18,13 @@
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
-                <!-- NEED TEEVAD SELLEST PÄRIS LAUNCHERI -->
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+
         </activity>
 
-        <!-- APPLIKATSIOONIDE LIST -->
+        <!-- Apps list activity -->
         <activity
             android:name=".AppsActivity"
             android:exported="false" />
