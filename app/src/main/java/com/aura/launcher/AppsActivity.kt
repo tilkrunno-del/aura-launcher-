@@ -8,7 +8,7 @@ import android.text.TextWatcher
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class AppsActivity : AppCompatActivity() {
@@ -30,25 +30,15 @@ class AppsActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.appsRecyclerView)
         searchEditText = findViewById(R.id.searchEditText)
 
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        // launcher feel (võid panna 3 kui tahad suuremad ikoonid)
+        recyclerView.layoutManager = GridLayoutManager(this, 4)
 
         allApps.clear()
         allApps.addAll(loadInstalledApps(packageManager))
 
         adapter = AppsAdapter(allApps) { app ->
-            // KINDLAIM viis: käivita explicit activity (package + class)
-            try {
-                val i = Intent().apply {
-                    setClassName(app.packageName, app.className)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                startActivity(i)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(this, "Ei saa avada: ${app.label}", Toast.LENGTH_SHORT).show()
-            }
+            openApp(app)
         }
-
         recyclerView.adapter = adapter
 
         val initialQuery = intent.getStringExtra(EXTRA_QUERY).orEmpty()
@@ -65,6 +55,29 @@ class AppsActivity : AppCompatActivity() {
                 adapter.filterApps(s?.toString().orEmpty())
             }
         })
+    }
+
+    private fun openApp(app: AppInfo) {
+        try {
+            // 1) Proovi standard launch intent
+            val launch = packageManager.getLaunchIntentForPackage(app.packageName)
+            if (launch != null) {
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+                startActivity(launch)
+                return
+            }
+
+            // 2) Fallback: explicit component (package + class)
+            val explicit = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_LAUNCHER)
+                setClassName(app.packageName, app.className)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+            }
+            startActivity(explicit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Ei saa avada: ${app.label}\n${app.packageName}", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun loadInstalledApps(pm: PackageManager): List<AppInfo> {
