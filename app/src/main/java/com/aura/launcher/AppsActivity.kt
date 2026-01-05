@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -35,9 +36,19 @@ class AppsActivity : AppCompatActivity() {
         allApps.addAll(loadInstalledApps(packageManager))
 
         adapter = AppsAdapter(allApps) { app ->
-            val launchIntent = packageManager.getLaunchIntentForPackage(app.packageName)
-            if (launchIntent != null) startActivity(launchIntent)
+            // KINDLAIM viis: käivita explicit activity (package + class)
+            try {
+                val i = Intent().apply {
+                    setClassName(app.packageName, app.className)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(i)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this, "Ei saa avada: ${app.label}", Toast.LENGTH_SHORT).show()
+            }
         }
+
         recyclerView.adapter = adapter
 
         val initialQuery = intent.getStringExtra(EXTRA_QUERY).orEmpty()
@@ -66,8 +77,9 @@ class AppsActivity : AppCompatActivity() {
         return resolved.map { ri ->
             val label = ri.loadLabel(pm)?.toString() ?: ri.activityInfo.packageName
             val pkg = ri.activityInfo.packageName
+            val cls = ri.activityInfo.name
             val icon = ri.loadIcon(pm)
-            AppInfo(label = label, packageName = pkg, icon = icon)
+            AppInfo(label = label, packageName = pkg, className = cls, icon = icon)
         }.sortedBy { it.label.lowercase() }
     }
 }
