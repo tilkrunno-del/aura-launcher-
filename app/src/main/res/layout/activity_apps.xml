@@ -1,42 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/rootApps"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="12dp">
 
-    <!-- Otsingurida + X nupp -->
-    <LinearLayout
+    <EditText
+        android:id="@+id/searchEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-
-        <EditText
-            android:id="@+id/editSearch"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Otsi..."
-            android:singleLine="true"
-            android:imeOptions="actionSearch"
-            android:inputType="text"
-            android:padding="8dp" />
-
-        <ImageButton
-            android:id="@+id/btnClearSearch"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="8dp"
-            android:background="@android:color/transparent"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:contentDescription="Clear search"
-            android:visibility="gone" />
-    </LinearLayout>
+        android:hint="Search apps"
+        android:imeOptions="actionDone"
+        android:inputType="text" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerApps"
+        android:id="@+id/appsRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="12dp"
