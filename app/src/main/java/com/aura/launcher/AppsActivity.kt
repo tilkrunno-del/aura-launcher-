@@ -5,71 +5,78 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import android.widget.EditText
 
 class AppsActivity : AppCompatActivity() {
 
-    companion object {
-        const val EXTRA_QUERY = "extra_query"
-    }
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var searchEditText: EditText
 
     private lateinit var adapter: AppsAdapter
-    private val allApps = mutableListOf<AppInfo>()
+    private val allApps: MutableList<AppInfo> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ⚠️ Pane siia see layout, kus sul on otsing + RecyclerView
+        // Kui sul on eraldi apps-ekraan, siis tavaliselt: activity_apps
         setContentView(R.layout.activity_apps)
 
-        val recyclerView = findViewById<RecyclerView>(R.id.appsRecyclerView)
-        val searchInput = findViewById<EditText>(R.id.searchInput)
+        recyclerView = findViewById(R.id.appsRecyclerView)
+        searchEditText = findViewById(R.id.searchEditText)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        loadApps()
-        adapter = AppsAdapter(allApps) { app ->
-            launchApp(app.packageName)
-        }
+        allApps.clear()
+        allApps.addAll(loadInstalledApps(packageManager))
+
+        adapter = AppsAdapter(
+            apps = allApps,
+            onClick = { app ->
+                val launchIntent = packageManager.getLaunchIntentForPackage(app.packageName)
+                if (launchIntent != null) startActivity(launchIntent)
+            }
+        )
         recyclerView.adapter = adapter
 
-        // algne query MainActivity-st
-        val initialQuery = intent.getStringExtra(EXTRA_QUERY).orEmpty()
-        if (initialQuery.isNotBlank()) {
-            adapter.filter(initialQuery)
-            searchInput.setText(initialQuery)
-            searchInput.setSelection(initialQuery.length)
-        }
-
-        // live otsing
-        searchInput.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                adapter.filter(s.toString())
-            }
+        // Otsing
+        searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                adapter.filterApps(s?.toString().orEmpty())
+            }
         })
+
+        // Kui tahad, et avatuna tuleks kohe fokus otsingule (valikuline)
+        // searchEditText.requestFocus()
+
+        // Kui sa kuskilt intentiga query edasi andsid (valikuline)
+        // val q = intent.getStringExtra("EXTRA_QUERY").orEmpty()
+        // if (q.isNotBlank()) {
+        //     searchEditText.setText(q)
+        //     searchEditText.setSelection(q.length)
+        // }
     }
 
-    private fun loadApps() {
-        val pm = packageManager
-        val intent = Intent(Intent.ACTION_MAIN, null)
-        intent.addCategory(Intent.CATEGORY_LAUNCHER)
-
-        val apps = pm.queryIntentActivities(intent, 0)
-        for (resolveInfo in apps) {
-            val label = resolveInfo.loadLabel(pm).toString()
-            val packageName = resolveInfo.activityInfo.packageName
-            val icon = resolveInfo.loadIcon(pm)
-            allApps.add(AppInfo(label, packageName, icon))
+    private fun loadInstalledApps(pm: PackageManager): List<AppInfo> {
+        val intent = Intent(Intent.ACTION_MAIN, null).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
         }
 
-        allApps.sortBy { it.label.lowercase() }
-    }
+        val resolved = pm.queryIntentActivities(intent, 0)
 
-    private fun launchApp(packageName: String) {
-        val intent = packageManager.getLaunchIntentForPackage(packageName)
-        intent?.let { startActivity(it) }
+        val list = resolved.map { ri ->
+            val label = ri.loadLabel(pm)?.toString() ?: ri.activityInfo.packageName
+            val pkg = ri.activityInfo.packageName
+            val icon = ri.loadIcon(pm)
+            AppInfo(appName = label, packageName = pkg, appIcon = icon)
+        }.sortedBy { it.appName.lowercase() }
+
+        return list
     }
 }
