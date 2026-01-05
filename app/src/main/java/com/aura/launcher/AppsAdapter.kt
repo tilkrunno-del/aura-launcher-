@@ -8,36 +8,39 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class AppsAdapter(
-    private var apps: List<AppInfo>,
+    private val allApps: List<AppInfo>,
     private val onClick: (AppInfo) -> Unit
 ) : RecyclerView.Adapter<AppsAdapter.AppViewHolder>() {
 
-    fun updateApps(newApps: List<AppInfo>) {
-        apps = newApps
-        notifyDataSetChanged()
+    private val visibleApps = allApps.toMutableList()
+
+    class AppViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val icon: ImageView = itemView.findViewById(R.id.appIcon)
+        val label: TextView = itemView.findViewById(R.id.appName)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_app, parent, false)
-        return AppViewHolder(view)
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_app, parent, false)
+        return AppViewHolder(v)
     }
 
     override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
-        val app = apps[position]
-        holder.bind(app)
+        val app = visibleApps[position]
+        holder.icon.setImageDrawable(app.icon)
+        holder.label.text = app.label
         holder.itemView.setOnClickListener { onClick(app) }
     }
 
-    override fun getItemCount(): Int = apps.size
+    override fun getItemCount(): Int = visibleApps.size
 
-    class AppViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val icon: ImageView = itemView.findViewById(R.id.imgIcon)
-        private val title: TextView = itemView.findViewById(R.id.textTitle)
-
-        fun bind(app: AppInfo) {
-            icon.setImageDrawable(app.icon)
-            title.text = app.label
+    fun filterApps(query: String) {
+        val q = query.trim().lowercase()
+        visibleApps.clear()
+        if (q.isEmpty()) {
+            visibleApps.addAll(allApps)
+        } else {
+            visibleApps.addAll(allApps.filter { it.label.lowercase().contains(q) })
         }
+        notifyDataSetChanged()
     }
 }
