@@ -6,41 +6,48 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Locale
 
 class AppsAdapter(
     private val allApps: List<AppInfo>,
     private val onClick: (AppInfo) -> Unit
 ) : RecyclerView.Adapter<AppsAdapter.AppViewHolder>() {
 
-    private val visibleApps = allApps.toMutableList()
-
-    class AppViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val icon: ImageView = itemView.findViewById(R.id.appIcon)
-        val label: TextView = itemView.findViewById(R.id.appName)
-    }
+    private val shownApps: MutableList<AppInfo> = allApps.toMutableList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_app, parent, false)
-        return AppViewHolder(v)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_app, parent, false)
+        return AppViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
-        val app = visibleApps[position]
-        holder.icon.setImageDrawable(app.icon)
-        holder.label.text = app.label
+        val app = shownApps[position]
+        holder.bind(app)
         holder.itemView.setOnClickListener { onClick(app) }
     }
 
-    override fun getItemCount(): Int = visibleApps.size
+    override fun getItemCount(): Int = shownApps.size
 
     fun filterApps(query: String) {
-        val q = query.trim().lowercase()
-        visibleApps.clear()
+        val q = query.trim().lowercase(Locale.getDefault())
+
+        shownApps.clear()
         if (q.isEmpty()) {
-            visibleApps.addAll(allApps)
+            shownApps.addAll(allApps)
         } else {
-            visibleApps.addAll(allApps.filter { it.label.lowercase().contains(q) })
+            shownApps.addAll(allApps.filter { it.label.lowercase(Locale.getDefault()).contains(q) })
         }
         notifyDataSetChanged()
+    }
+
+    class AppViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val appIcon: ImageView = itemView.findViewById(R.id.appIcon)
+        private val appName: TextView = itemView.findViewById(R.id.appName)
+
+        fun bind(app: AppInfo) {
+            appIcon.setImageDrawable(app.icon)
+            appName.text = app.label
+        }
     }
 }
