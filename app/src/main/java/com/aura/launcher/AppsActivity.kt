@@ -1,75 +1,55 @@
 package com.aura.launcher
 
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import android.widget.EditText
+import java.util.Locale
 
-class AppsActivity : AppCompatActivity() {
+class AppsAdapter(
+    private val originalList: List<AppInfo>,
+    private val onClick: (AppInfo) -> Unit
+) : RecyclerView.Adapter<AppsAdapter.VH>() {
 
-    companion object {
-        const val EXTRA_QUERY = "extra_query"
+    private val filteredList = mutableListOf<AppInfo>().apply {
+        addAll(originalList)
     }
 
-    private lateinit var adapter: AppsAdapter
-    private val allApps = mutableListOf<AppInfo>()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_apps)
-
-        val recyclerView = findViewById<RecyclerView>(R.id.appsRecyclerView)
-        val searchInput = findViewById<EditText>(R.id.searchInput)
-
-        recyclerView.layoutManager = LinearLayoutManager(this)
-
-        loadApps()
-        adapter = AppsAdapter(allApps) { app ->
-            launchApp(app.packageName)
-        }
-        recyclerView.adapter = adapter
-
-        // algne query MainActivity-st
-        val initialQuery = intent.getStringExtra(EXTRA_QUERY).orEmpty()
-        if (initialQuery.isNotBlank()) {
-            adapter.filter(initialQuery)
-            searchInput.setText(initialQuery)
-            searchInput.setSelection(initialQuery.length)
-        }
-
-        // live otsing
-        searchInput.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                adapter.filter(s.toString())
-            }
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
+    class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val icon: ImageView = itemView.findViewById(R.id.appIcon)
+        val name: TextView = itemView.findViewById(R.id.appName)
     }
 
-    private fun loadApps() {
-        val pm = packageManager
-        val intent = Intent(Intent.ACTION_MAIN, null)
-        intent.addCategory(Intent.CATEGORY_LAUNCHER)
-
-        val apps = pm.queryIntentActivities(intent, 0)
-        for (resolveInfo in apps) {
-            val label = resolveInfo.loadLabel(pm).toString()
-            val packageName = resolveInfo.activityInfo.packageName
-            val icon = resolveInfo.loadIcon(pm)
-            allApps.add(AppInfo(label, packageName, icon))
-        }
-
-        allApps.sortBy { it.label.lowercase() }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_app, parent, false)
+        return VH(view)
     }
 
-    private fun launchApp(packageName: String) {
-        val intent = packageManager.getLaunchIntentForPackage(packageName)
-        intent?.let { startActivity(it) }
+    override fun onBindViewHolder(holder: VH, position: Int) {
+        val app = filteredList[position]
+        holder.name.text = app.label
+        holder.icon.setImageDrawable(app.icon)
+        holder.itemView.setOnClickListener { onClick(app) }
+    }
+
+    override fun getItemCount(): Int = filteredList.size
+
+    fun filterApps(query: String) {
+        val q = query.lowercase(Locale.getDefault())
+        filteredList.clear()
+
+        if (q.isBlank()) {
+            filteredList.addAll(originalList)
+        } else {
+            filteredList.addAll(
+                originalList.filter {
+                    it.label.lowercase(Locale.getDefault()).contains(q)
+                }
+            )
+        }
+        notifyDataSetChanged()
     }
 }
