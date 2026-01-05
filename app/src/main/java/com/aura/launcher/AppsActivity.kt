@@ -3,8 +3,6 @@ package com.aura.launcher
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -32,17 +30,14 @@ class AppsActivity : AppCompatActivity() {
 
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Lae appid
         allApps.clear()
         allApps.addAll(loadInstalledApps(packageManager))
 
-        // Adapter + click
         adapter = AppsAdapter(allApps) { app ->
             launchApp(app)
         }
         recyclerView.adapter = adapter
 
-        // Kui tuldi siia query-ga
         val initialQuery = intent.getStringExtra(EXTRA_QUERY).orEmpty()
         if (initialQuery.isNotBlank()) {
             searchEditText.setText(initialQuery)
@@ -50,24 +45,23 @@ class AppsActivity : AppCompatActivity() {
             adapter.filterApps(initialQuery)
         }
 
-        // Otsing
-        searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun afterTextChanged(s: Editable?) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                adapter.filterApps(s?.toString().orEmpty())
-            }
+        // Lihtsam ja kindel: doAfterTextChanged (pole TextWatcher jamasid)
+        searchEditText.addTextChangedListener(SimpleTextWatcher { text ->
+            adapter.filterApps(text)
         })
     }
 
     private fun launchApp(app: AppInfo) {
-        val launchIntent = packageManager.getLaunchIntentForPackage(app.packageName)
-        if (launchIntent == null) {
+        try {
+            val intent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_LAUNCHER)
+                setClassName(app.packageName, app.className)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
             Toast.makeText(this, "Ei saa avada: ${app.label}", Toast.LENGTH_SHORT).show()
-            return
         }
-        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(launchIntent)
     }
 
     private fun loadInstalledApps(pm: PackageManager): List<AppInfo> {
@@ -80,8 +74,9 @@ class AppsActivity : AppCompatActivity() {
         return resolved.map { ri ->
             val label = ri.loadLabel(pm)?.toString() ?: ri.activityInfo.packageName
             val pkg = ri.activityInfo.packageName
+            val cls = ri.activityInfo.name  // <-- oluline!
             val icon = ri.loadIcon(pm)
-            AppInfo(label = label, packageName = pkg, icon = icon)
+            AppInfo(label = label, packageName = pkg, className = cls, icon = icon)
         }.sortedBy { it.label.lowercase() }
     }
 }
