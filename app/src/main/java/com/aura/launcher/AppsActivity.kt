@@ -19,9 +19,8 @@ class AppsActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchEditText: EditText
-
     private lateinit var adapter: AppsAdapter
-    private val allApps: MutableList<AppInfo> = mutableListOf()
+    private val allApps = mutableListOf<AppInfo>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,33 +35,33 @@ class AppsActivity : AppCompatActivity() {
         allApps.addAll(loadInstalledApps(packageManager))
 
         adapter = AppsAdapter(allApps) { app ->
-            openApp(app)
+            launchApp(app)
         }
+
         recyclerView.adapter = adapter
 
-        val initialQuery = intent.getStringExtra(EXTRA_QUERY).orEmpty()
-        if (initialQuery.isNotBlank()) {
-            searchEditText.setText(initialQuery)
-            searchEditText.setSelection(initialQuery.length)
-            adapter.filterApps(initialQuery)
+        // algne otsing MainActivity-st
+        val query = intent.getStringExtra(EXTRA_QUERY).orEmpty()
+        if (query.isNotBlank()) {
+            searchEditText.setText(query)
+            searchEditText.setSelection(query.length)
+            adapter.filterApps(query)
         }
 
+        // ⚠️ ÕIGE TextWatcher (MITTE lambda)
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun afterTextChanged(s: Editable?) {}
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 adapter.filterApps(s?.toString().orEmpty())
             }
         })
     }
 
-    private fun openApp(app: AppInfo) {
+    private fun launchApp(app: AppInfo) {
         try {
-            val pm = packageManager
-
-            // Kindlam variant: leia launch activity package jaoks
-            val intent = pm.getLaunchIntentForPackage(app.packageName)
-                ?: pm.getLeanbackLaunchIntentForPackage(app.packageName)
+            val intent = packageManager.getLaunchIntentForPackage(app.packageName)
 
             if (intent == null) {
                 Toast.makeText(this, "Ei saa avada: ${app.label}", Toast.LENGTH_SHORT).show()
@@ -71,8 +70,9 @@ class AppsActivity : AppCompatActivity() {
 
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
+
         } catch (e: Exception) {
-            Toast.makeText(this, "Viga avamisel: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Viga: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -81,13 +81,14 @@ class AppsActivity : AppCompatActivity() {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }
 
-        val resolved = pm.queryIntentActivities(intent, 0)
+        val apps = pm.queryIntentActivities(intent, 0)
 
-        return resolved.map { ri ->
-            val label = ri.loadLabel(pm)?.toString() ?: ri.activityInfo.packageName
-            val pkg = ri.activityInfo.packageName
-            val icon = ri.loadIcon(pm)
-            AppInfo(label = label, packageName = pkg, icon = icon)
+        return apps.map {
+            AppInfo(
+                label = it.loadLabel(pm).toString(),
+                packageName = it.activityInfo.packageName,
+                icon = it.loadIcon(pm)
+            )
         }.sortedBy { it.label.lowercase() }
     }
 }
