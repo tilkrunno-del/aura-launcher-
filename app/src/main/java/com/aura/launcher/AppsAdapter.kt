@@ -6,45 +6,42 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import java.util.Locale
 
 class AppsAdapter(
     private val originalApps: List<AppInfo>,
     private val onClick: (AppInfo) -> Unit
-) : RecyclerView.Adapter<AppsAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<AppsAdapter.AppViewHolder>() {
 
     private val filteredApps = originalApps.toMutableList()
 
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val icon: ImageView = view.findViewById(R.id.appIcon)
-        val name: TextView = view.findViewById(R.id.appName)
+    class AppViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val icon: ImageView = itemView.findViewById(R.id.appIcon)
+        val name: TextView = itemView.findViewById(R.id.appName)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_app, parent, false)
-        return ViewHolder(view)
+        return AppViewHolder(view)
     }
 
-    override fun getItemCount(): Int = filteredApps.size
-
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
         val app = filteredApps[position]
         holder.icon.setImageDrawable(app.icon)
         holder.name.text = app.label
         holder.itemView.setOnClickListener { onClick(app) }
     }
 
-    fun filterApps(query: String) {
-        val q = query.lowercase(Locale.getDefault())
-        filteredApps.clear()
+    override fun getItemCount(): Int = filteredApps.size
 
-        if (q.isEmpty()) {
+    fun filterApps(query: String) {
+        filteredApps.clear()
+        if (query.isBlank()) {
             filteredApps.addAll(originalApps)
         } else {
             filteredApps.addAll(
                 originalApps.filter {
-                    it.label.lowercase(Locale.getDefault()).contains(q)
+                    it.label.contains(query, ignoreCase = true)
                 }
             )
         }
