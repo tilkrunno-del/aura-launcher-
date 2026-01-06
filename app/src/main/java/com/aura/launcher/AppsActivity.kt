@@ -1,8 +1,12 @@
 package com.aura.launcher
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -10,43 +14,76 @@ import androidx.recyclerview.widget.RecyclerView
 
 class AppsActivity : AppCompatActivity() {
 
+    companion object {
+        const val EXTRA_QUERY = "EXTRA_QUERY"
+    }
+
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var searchEditText: EditText
+
+    private lateinit var adapter: AppsAdapter
+    private val allApps: MutableList<AppInfo> = mutableListOf()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_apps)
 
-        val recyclerView = findViewById<RecyclerView>(R.id.appsRecyclerView)
+        recyclerView = findViewById(R.id.appsRecyclerView)
+        searchEditText = findViewById(R.id.searchEditText)
+
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        val apps = loadInstalledApps(packageManager)
+        allApps.clear()
+        allApps.addAll(loadInstalledApps(packageManager))
 
-        recyclerView.adapter = AppsAdapter(apps) { app ->
-            val launchIntent =
-                packageManager.getLaunchIntentForPackage(app.packageName)
+        adapter = AppsAdapter(allApps) { app ->
+            val launchIntent = packageManager.getLaunchIntentForPackage(app.packageName)
+            if (launchIntent == null) {
+                Toast.makeText(this, "Seda äppi ei saa avada: ${app.label}", Toast.LENGTH_SHORT).show()
+                return@AppsAdapter
+            }
 
-            if (launchIntent != null) {
+            // ohutuse mõttes
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            try {
                 startActivity(launchIntent)
-            } else {
-                Toast.makeText(
-                    this,
-                    "Ei saa avada: ${app.label}",
-                    Toast.LENGTH_SHORT
-                ).show()
+            } catch (e: ActivityNotFoundException) {
+                Toast.makeText(this, "Äppi ei leitud: ${app.label}", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Viga avamisel: ${app.label}", Toast.LENGTH_SHORT).show()
             }
         }
+        recyclerView.adapter = adapter
+
+        val initialQuery = intent.getStringExtra(EXTRA_QUERY).orEmpty()
+        if (initialQuery.isNotBlank()) {
+            searchEditText.setText(initialQuery)
+            searchEditText.setSelection(initialQuery.length)
+            adapter.filterApps(initialQuery)
+        }
+
+        searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                adapter.filterApps(s?.toString().orEmpty())
+            }
+        })
     }
 
     private fun loadInstalledApps(pm: PackageManager): List<AppInfo> {
-        val intent = Intent(Intent.ACTION_MAIN, null)
-        intent.addCategory(Intent.CATEGORY_LAUNCHER)
+        val intent = Intent(Intent.ACTION_MAIN, null).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
+        }
 
         val resolved = pm.queryIntentActivities(intent, 0)
 
-        return resolved.map {
-            AppInfo(
-                label = it.loadLabel(pm).toString(),
-                packageName = it.activityInfo.packageName,
-                icon = it.loadIcon(pm)
-            )
-        }
+        return resolved.map { ri ->
+            val label = ri.loadLabel(pm)?.toString() ?: ri.activityInfo.packageName
+            val pkg = ri.activityInfo.packageName
+            val icon = ri.loadIcon(pm)
+            AppInfo(label = label, packageName = pkg, icon = icon)
+        }.sortedBy { it.label.lowercase() }
     }
 }
