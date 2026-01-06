@@ -1,5 +1,6 @@
 package com.aura.launcher
 
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -16,22 +17,35 @@ class AppsActivity : AppCompatActivity() {
         const val EXTRA_QUERY = "EXTRA_QUERY"
     }
 
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var searchEditText: EditText
+    private lateinit var adapter: AppsAdapter
+
+    private val allApps = mutableListOf<AppInfo>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_apps)
 
-        val recyclerView = findViewById<RecyclerView>(R.id.appsRecyclerView)
-        val searchEditText = findViewById<EditText>(R.id.searchEditText)
+        recyclerView = findViewById(R.id.appsRecyclerView)
+        searchEditText = findViewById(R.id.searchEditText)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        val apps = loadApps(packageManager)
+        allApps.clear()
+        allApps.addAll(loadInstalledApps(packageManager))
 
-        val adapter = AppsAdapter(apps) { app ->
-            val launchIntent =
-                packageManager.getLaunchIntentForPackage(app.packageName)
-            if (launchIntent != null) {
+        adapter = AppsAdapter(allApps) { app ->
+            // Kindel käivitus: package + className
+            val launchIntent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_LAUNCHER)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                component = ComponentName(app.packageName, app.className)
+            }
+            try {
                 startActivity(launchIntent)
+            } catch (_: Exception) {
+                // kui mingi äpp ei luba starti, siis lihtsalt ei juhtu midagi
             }
         }
 
@@ -39,32 +53,34 @@ class AppsActivity : AppCompatActivity() {
 
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun afterTextChanged(s: Editable?) {}
-
-            override fun onTextChanged(
-                s: CharSequence?,
-                start: Int,
-                before: Int,
-                count: Int
-            ) {
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 adapter.filterApps(s?.toString().orEmpty())
             }
+            override fun afterTextChanged(s: Editable?) {}
         })
+
+        val initialQuery = intent.getStringExtra(EXTRA_QUERY)
+        if (!initialQuery.isNullOrBlank()) {
+            searchEditText.setText(initialQuery)
+            searchEditText.setSelection(initialQuery.length)
+            adapter.filterApps(initialQuery)
+        }
     }
 
-    private fun loadApps(pm: PackageManager): List<AppInfo> {
-        val intent = Intent(Intent.ACTION_MAIN).apply {
+    private fun loadInstalledApps(pm: PackageManager): List<AppInfo> {
+        val intent = Intent(Intent.ACTION_MAIN, null).apply {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }
 
-        return pm.queryIntentActivities(intent, 0)
-            .map {
-                AppInfo(
-                    label = it.loadLabel(pm).toString(),
-                    packageName = it.activityInfo.packageName,
-                    icon = it.loadIcon(pm)
-                )
-            }
-            .sortedBy { it.label.lowercase() }
+        val resolved = pm.queryIntentActivities(intent, 0)
+
+        return resolved.map {
+            AppInfo(
+                label = it.loadLabel(pm).toString(),
+                packageName = it.activityInfo.packageName,
+                className = it.activityInfo.name, // <-- SEE on see “className”
+                icon = it.loadIcon(pm)
+            )
+        }.sortedBy { it.label.lowercase() }
     }
 }
