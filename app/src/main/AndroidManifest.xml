@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Android 11+ jaoks: et saaks installitud äppe listida -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
     <application
@@ -11,19 +10,19 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:theme="@style/Theme.AuraLauncher">
 
-        <!-- Launcher (HOME) activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+
         </activity>
 
-        <!-- Apps list activity -->
         <activity
             android:name=".AppsActivity"
             android:exported="false" />
