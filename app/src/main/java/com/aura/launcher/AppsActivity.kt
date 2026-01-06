@@ -32,7 +32,8 @@ class AppsActivity : AppCompatActivity() {
         val apps = loadInstalledApps(packageManager)
 
         adapter = AppsAdapter(apps) { app ->
-            val launchIntent = packageManager.getLaunchIntentForPackage(app.packageName)
+            val launchIntent =
+                packageManager.getLaunchIntentForPackage(app.packageName)
             if (launchIntent != null) {
                 startActivity(launchIntent)
             }
@@ -42,17 +43,20 @@ class AppsActivity : AppCompatActivity() {
 
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            override fun onTextChanged(
+                s: CharSequence?,
+                start: Int,
+                before: Int,
+                count: Int
+            ) {
                 adapter.filterApps(s?.toString().orEmpty())
             }
-
-            override fun afterTextChanged(s: Editable?) {}
         })
 
         intent.getStringExtra(EXTRA_QUERY)?.let {
             searchEditText.setText(it)
-            searchEditText.setSelection(it.length)
             adapter.filterApps(it)
         }
     }
@@ -62,14 +66,14 @@ class AppsActivity : AppCompatActivity() {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }
 
-        val resolved = pm.queryIntentActivities(intent, 0)
-
-        return resolved.map {
-            AppInfo(
-                label = it.loadLabel(pm).toString(),
-                packageName = it.activityInfo.packageName,
-                icon = it.loadIcon(pm)
-            )
-        }.sortedBy { it.label.lowercase() }
+        return pm.queryIntentActivities(intent, 0)
+            .map {
+                AppInfo(
+                    label = it.loadLabel(pm).toString(),
+                    packageName = it.activityInfo.packageName,
+                    icon = it.loadIcon(pm)
+                )
+            }
+            .sortedBy { it.label.lowercase() }
     }
 }
