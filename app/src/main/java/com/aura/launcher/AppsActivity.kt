@@ -35,7 +35,7 @@ class AppsActivity : AppCompatActivity() {
         allApps.addAll(loadInstalledApps(packageManager))
 
         adapter = AppsAdapter(allApps) { app ->
-            // Avame kindlalt õige Activity (package + className)
+            // Käivita konkreetne activity (package + className)
             val i = Intent().apply {
                 setClassName(app.packageName, app.className)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -74,7 +74,7 @@ class AppsActivity : AppCompatActivity() {
             AppInfo(
                 label = it.loadLabel(pm).toString(),
                 packageName = it.activityInfo.packageName,
-                className = it.activityInfo.name,          // ✅ SEE PARANDAB "className" errori
+                className = it.activityInfo.name,   // ✅ vajalik parameeter
                 icon = it.loadIcon(pm)
             )
         }.sortedBy { it.label.lowercase() }
