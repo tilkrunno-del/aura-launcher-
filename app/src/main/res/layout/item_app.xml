@@ -4,9 +4,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="10dp"
-    android:clickable="true"
-    android:focusable="true">
+    android:padding="10dp">
 
     <ImageView
         android:id="@+id/appIcon"
@@ -18,9 +16,11 @@
         android:id="@+id/appName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:gravity="center"
         android:maxLines="1"
         android:ellipsize="end"
-        android:textSize="12sp" />
+        android:textSize="12sp"
+        android:textColor="#111111" />
+
 </LinearLayout>
