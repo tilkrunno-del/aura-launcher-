@@ -20,6 +20,8 @@ class AppsActivity : AppCompatActivity() {
     private lateinit var searchEditText: EditText
     private lateinit var adapter: AppsAdapter
 
+    private val allApps = mutableListOf<AppInfo>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_apps)
@@ -29,51 +31,52 @@ class AppsActivity : AppCompatActivity() {
 
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        val apps = loadInstalledApps(packageManager)
+        allApps.clear()
+        allApps.addAll(loadInstalledApps(packageManager))
 
-        adapter = AppsAdapter(apps) { app ->
-            val launchIntent =
-                packageManager.getLaunchIntentForPackage(app.packageName)
-            if (launchIntent != null) {
-                startActivity(launchIntent)
+        adapter = AppsAdapter(allApps) { app ->
+            // Avame kindlalt õige Activity (package + className)
+            val i = Intent().apply {
+                setClassName(app.packageName, app.className)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
+            startActivity(i)
         }
 
         recyclerView.adapter = adapter
 
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun afterTextChanged(s: Editable?) {}
 
-            override fun onTextChanged(
-                s: CharSequence?,
-                start: Int,
-                before: Int,
-                count: Int
-            ) {
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 adapter.filterApps(s?.toString().orEmpty())
             }
+
+            override fun afterTextChanged(s: Editable?) {}
         })
 
-        intent.getStringExtra(EXTRA_QUERY)?.let {
-            searchEditText.setText(it)
-            adapter.filterApps(it)
+        val initialQuery = intent.getStringExtra(EXTRA_QUERY)
+        if (!initialQuery.isNullOrBlank()) {
+            searchEditText.setText(initialQuery)
+            searchEditText.setSelection(initialQuery.length)
+            adapter.filterApps(initialQuery)
         }
     }
 
     private fun loadInstalledApps(pm: PackageManager): List<AppInfo> {
-        val intent = Intent(Intent.ACTION_MAIN).apply {
+        val intent = Intent(Intent.ACTION_MAIN, null).apply {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }
 
-        return pm.queryIntentActivities(intent, 0)
-            .map {
-                AppInfo(
-                    label = it.loadLabel(pm).toString(),
-                    packageName = it.activityInfo.packageName,
-                    icon = it.loadIcon(pm)
-                )
-            }
-            .sortedBy { it.label.lowercase() }
+        val resolved = pm.queryIntentActivities(intent, 0)
+
+        return resolved.map {
+            AppInfo(
+                label = it.loadLabel(pm).toString(),
+                packageName = it.activityInfo.packageName,
+                className = it.activityInfo.name,          // ✅ SEE PARANDAB "className" errori
+                icon = it.loadIcon(pm)
+            )
+        }.sortedBy { it.label.lowercase() }
     }
 }
