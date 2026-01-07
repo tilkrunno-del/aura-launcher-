@@ -2,8 +2,10 @@ package com.aura.launcher
 
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
+import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 
@@ -14,12 +16,24 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val searchInput = findViewById<EditText>(R.id.searchInput)
+        val btnOpenApps = findViewById<Button>(R.id.btnOpenApps)
+        val btnSetDefaultLauncher = findViewById<Button>(R.id.btnSetDefaultLauncher)
 
-        // ✅ Kui sul on ainult klaviatuuri otsing, siis vähemalt see töötab alati
+        // Nupp: Ava rakendused
+        btnOpenApps.setOnClickListener {
+            openApps(searchInput.text.toString())
+        }
+
+        // Nupp: Määra AURA vaikimisi avakuvarakenduseks
+        btnSetDefaultLauncher.setOnClickListener {
+            openHomeSettings()
+        }
+
+        // Klaviatuuri Search / Done / Enter
         searchInput.setOnEditorActionListener { _, actionId, event ->
             val imeAction =
                 actionId == EditorInfo.IME_ACTION_SEARCH ||
-                actionId == EditorInfo.IME_ACTION_DONE
+                        actionId == EditorInfo.IME_ACTION_DONE
 
             val enterKey =
                 event?.keyCode == KeyEvent.KEYCODE_ENTER &&
@@ -28,21 +42,8 @@ class MainActivity : AppCompatActivity() {
             if (imeAction || enterKey) {
                 openApps(searchInput.text.toString())
                 true
-            } else false
-        }
-
-        // ✅ Kui XML-is on olemas "Ava rakendused" nupp, siis pane talle listener
-        // (kui pole, siis ei juhtu midagi ja build ei kuku)
-        runCatching {
-            findViewById<android.view.View>(R.id.btnOpenApps).setOnClickListener {
-                openApps(searchInput.text.toString())
-            }
-        }
-
-        // ✅ Kui XML-is on olemas "Määra AURA..." nupp, siis ava seaded
-        runCatching {
-            findViewById<android.view.View>(R.id.btnSetDefaultHome).setOnClickListener {
-                openHomeSettings()
+            } else {
+                false
             }
         }
     }
@@ -54,16 +55,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openHomeSettings() {
+        // Erinevatel telefonidel on erinevad seaded – proovime mitu varianti
         val intents = listOf(
-            Intent(android.provider.Settings.ACTION_HOME_SETTINGS),
-            Intent(android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS),
-            Intent(android.provider.Settings.ACTION_SETTINGS)
+            Intent(Settings.ACTION_HOME_SETTINGS),
+            Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS),
+            Intent(Settings.ACTION_SETTINGS)
         )
+
         for (i in intents) {
             try {
                 startActivity(i)
                 return
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
     }
 }
