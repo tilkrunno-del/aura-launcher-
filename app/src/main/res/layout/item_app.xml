@@ -1,37 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/appTile"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:foreground="?attr/selectableItemBackgroundBorderless"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="10dp"
+    android:background="@drawable/item_ripple"
     android:clickable="true"
-    android:focusable="true"
-    android:padding="10dp">
+    android:focusable="true">
 
-    <LinearLayout
+    <ImageView
+        android:id="@+id/appIcon"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:scaleType="fitCenter"
+        android:contentDescription="@null" />
+
+    <TextView
+        android:id="@+id/appName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center">
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="12sp"
+        android:textColor="#111111" />
 
-        <ImageView
-            android:id="@+id/appIcon"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:contentDescription="@null" />
-
-        <TextView
-            android:id="@+id/appName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:maxLines="2"
-            android:ellipsize="end"
-            android:lineSpacingExtra="1dp"
-            android:textSize="12sp"
-            android:textColor="#111111" />
-
-    </LinearLayout>
-
-</FrameLayout>
-```0
+</LinearLayout>
