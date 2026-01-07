@@ -3,20 +3,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="12dp"
-    android:background="@android:color/white">
+    android:padding="12dp">
 
-    <!-- 🔍 OTSINGURIBA -->
+    <!-- Ümar otsinguriba -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@drawable/bg_search"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:paddingTop="12dp"
-        android:paddingBottom="12dp">
+        android:paddingBottom="12dp"
+        android:background="@drawable/bg_search">
 
         <EditText
             android:id="@+id/searchEditText"
@@ -26,26 +25,39 @@
             android:hint="Otsi rakendust"
             android:imeOptions="actionSearch"
             android:inputType="text"
-            android:textSize="16sp"
             android:background="@android:color/transparent"
-            android:padding="0dp" />
+            android:padding="0dp"
+            android:textSize="16sp" />
 
+        <!-- Luup (dekoratiivne) -->
         <ImageView
-            android:layout_width="22dp"
-            android:layout_height="22dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="8dp"
             android:src="@android:drawable/ic_menu_search"
-            android:contentDescription="@null"
-            android:alpha="0.6" />
+            android:contentDescription="@null" />
     </LinearLayout>
 
-    <!-- 📱 RAKENDUSTE GRID -->
+    <!-- Rakenduste grid -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/appsRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
         android:layout_marginTop="12dp"
-        android:padding="6dp"
-        android:clipToPadding="false" />
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:padding="6dp" />
+
+    <!-- Kui otsing ei leia midagi -->
+    <TextView
+        android:id="@+id/emptyText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="center"
+        android:text="Ei leidnud ühtegi rakendust"
+        android:textSize="14sp"
+        android:textColor="#666666"
+        android:visibility="gone" />
 
 </LinearLayout>
