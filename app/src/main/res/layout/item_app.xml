@@ -12,13 +12,13 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center"
-        android:padding="10dp"
-        android:background="@android:color/transparent">
+        android:padding="10dp">
 
-        <!-- Ikoon “kastis” (ühtlane suurus + väike taust) -->
+        <!-- Ikooni ümar “badge” -->
         <FrameLayout
             android:layout_width="64dp"
             android:layout_height="64dp"
+            android:background="@drawable/icon_badge"
             android:foreground="?attr/selectableItemBackgroundBorderless">
 
             <ImageView
@@ -26,9 +26,11 @@
                 android:layout_width="56dp"
                 android:layout_height="56dp"
                 android:layout_gravity="center"
+                android:scaleType="fitCenter"
                 android:contentDescription="@null" />
         </FrameLayout>
 
+        <!-- Rakenduse nimi -->
         <TextView
             android:id="@+id/appName"
             android:layout_width="match_parent"
