@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -30,54 +29,44 @@ class AppsActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.appsRecyclerView)
         searchEditText = findViewById(R.id.searchEditText)
 
-        // GRID: 4 veergu (muuda 3-ks, kui tahad suuremaid ikoone)
-        recyclerView.layoutManager = GridLayoutManager(this, 4)
+        // ✅ 3 veergu
+        recyclerView.layoutManager = GridLayoutManager(this, 3)
 
+        // Lae äpid
         allApps.clear()
         allApps.addAll(loadInstalledApps(packageManager))
 
         adapter = AppsAdapter(allApps) { app ->
-            launchApp(app)
+            val launchIntent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_LAUNCHER)
+                setClassName(app.packageName, app.className)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            try {
+                startActivity(launchIntent)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
+
         recyclerView.adapter = adapter
 
-        // Otsing
+        // 🔍 Otsing
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun afterTextChanged(s: Editable?) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 adapter.filterApps(s?.toString().orEmpty())
             }
+            override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Kui tuli query MainActivity-st
-        val initialQuery = intent.getStringExtra(EXTRA_QUERY)
-        if (!initialQuery.isNullOrBlank()) {
-            searchEditText.setText(initialQuery)
-            searchEditText.setSelection(initialQuery.length)
-            adapter.filterApps(initialQuery)
-        }
-    }
-
-    private fun launchApp(app: AppInfo) {
-        val pm = packageManager
-
-        // 1) Eelistatud viis
-        val primary = pm.getLaunchIntentForPackage(app.packageName)?.apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-
-        // 2) Fallback: konkreetne komponent
-        val fallback = Intent(Intent.ACTION_MAIN).apply {
-            addCategory(Intent.CATEGORY_LAUNCHER)
-            setClassName(app.packageName, app.className)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-
-        try {
-            startActivity(primary ?: fallback)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Ei saa avada: ${app.label}", Toast.LENGTH_SHORT).show()
+        // Algne otsing MainActivity-st
+        intent.getStringExtra(EXTRA_QUERY)?.let { query ->
+            if (query.isNotBlank()) {
+                searchEditText.setText(query)
+                searchEditText.setSelection(query.length)
+                adapter.filterApps(query)
+            }
         }
     }
 
