@@ -1,13 +1,11 @@
 package com.aura.launcher
 
-import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -37,8 +35,19 @@ class AppsActivity : AppCompatActivity() {
         allApps.addAll(loadInstalledApps(packageManager))
 
         adapter = AppsAdapter(allApps) { app ->
-            launchApp(app)
+            // Käivita konkreetne Activity (package + className)
+            val launchIntent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_LAUNCHER)
+                setClassName(app.packageName, app.className)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            try {
+                startActivity(launchIntent)
+            } catch (_: Exception) {
+                // kui mingil põhjusel ei käivitu, ära crashi
+            }
         }
+
         recyclerView.adapter = adapter
 
         // Otsing
@@ -59,29 +68,6 @@ class AppsActivity : AppCompatActivity() {
         }
     }
 
-    private fun launchApp(app: AppInfo) {
-        try {
-            // Kindlaim viis: käivita konkreetne launcher-activity (package + class)
-            val cn = ComponentName(app.packageName, app.className)
-            val intent = Intent(Intent.ACTION_MAIN).apply {
-                addCategory(Intent.CATEGORY_LAUNCHER)
-                component = cn
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            startActivity(intent)
-            finish()
-        } catch (e: Exception) {
-            // fallback: mõne äpi puhul võib klass olla teistsugune
-            val fallback = packageManager.getLaunchIntentForPackage(app.packageName)
-            if (fallback != null) {
-                startActivity(fallback)
-                finish()
-            } else {
-                Toast.makeText(this, "Ei saanud avada: ${app.label}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
     private fun loadInstalledApps(pm: PackageManager): List<AppInfo> {
         val intent = Intent(Intent.ACTION_MAIN, null).apply {
             addCategory(Intent.CATEGORY_LAUNCHER)
@@ -89,12 +75,12 @@ class AppsActivity : AppCompatActivity() {
 
         val resolved = pm.queryIntentActivities(intent, 0)
 
-        return resolved.map {
+        return resolved.map { ri ->
             AppInfo(
-                label = it.loadLabel(pm).toString(),
-                packageName = it.activityInfo.packageName,
-                className = it.activityInfo.name,   // <-- SEE on puudu sul
-                icon = it.loadIcon(pm)
+                label = ri.loadLabel(pm).toString(),
+                packageName = ri.activityInfo.packageName,
+                className = ri.activityInfo.name,   // ✅ oluline fix
+                icon = ri.loadIcon(pm)
             )
         }.sortedBy { it.label.lowercase() }
     }
