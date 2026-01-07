@@ -6,8 +6,9 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class AppsActivity : AppCompatActivity() {
@@ -29,42 +30,54 @@ class AppsActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.appsRecyclerView)
         searchEditText = findViewById(R.id.searchEditText)
 
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        // GRID: 4 veergu (muuda 3-ks, kui tahad suuremaid ikoone)
+        recyclerView.layoutManager = GridLayoutManager(this, 4)
 
         allApps.clear()
         allApps.addAll(loadInstalledApps(packageManager))
 
         adapter = AppsAdapter(allApps) { app ->
-            // Käivita konkreetne Activity (package + className)
-            val launchIntent = Intent(Intent.ACTION_MAIN).apply {
-                addCategory(Intent.CATEGORY_LAUNCHER)
-                setClassName(app.packageName, app.className)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            try {
-                startActivity(launchIntent)
-            } catch (_: Exception) {
-                // kui mingil põhjusel ei käivitu, ära crashi
-            }
+            launchApp(app)
         }
-
         recyclerView.adapter = adapter
 
         // Otsing
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 adapter.filterApps(s?.toString().orEmpty())
             }
-            override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Algne query MainActivity-st
+        // Kui tuli query MainActivity-st
         val initialQuery = intent.getStringExtra(EXTRA_QUERY)
         if (!initialQuery.isNullOrBlank()) {
             searchEditText.setText(initialQuery)
             searchEditText.setSelection(initialQuery.length)
             adapter.filterApps(initialQuery)
+        }
+    }
+
+    private fun launchApp(app: AppInfo) {
+        val pm = packageManager
+
+        // 1) Eelistatud viis
+        val primary = pm.getLaunchIntentForPackage(app.packageName)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        // 2) Fallback: konkreetne komponent
+        val fallback = Intent(Intent.ACTION_MAIN).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
+            setClassName(app.packageName, app.className)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        try {
+            startActivity(primary ?: fallback)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Ei saa avada: ${app.label}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -79,7 +92,7 @@ class AppsActivity : AppCompatActivity() {
             AppInfo(
                 label = ri.loadLabel(pm).toString(),
                 packageName = ri.activityInfo.packageName,
-                className = ri.activityInfo.name,   // ✅ oluline fix
+                className = ri.activityInfo.name,
                 icon = ri.loadIcon(pm)
             )
         }.sortedBy { it.label.lowercase() }
