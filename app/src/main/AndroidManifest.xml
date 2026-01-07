@@ -1,16 +1,37 @@
-<activity
-    android:name=".AppsActivity"
-    android:exported="true"
-    android:launchMode="singleTask">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.aura.launcher">
 
-    <intent-filter>
-        <action android:name="android.intent.action.MAIN" />
-        <category android:name="android.intent.category.HOME" />
-        <category android:name="android.intent.category.DEFAULT" />
-    </intent-filter>
+    <application
+        android:allowBackup="true"
+        android:label="AURA Launcher"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AuraLauncher">
 
-</activity>
+        <!-- LAUNCHER / HOME -->
+        <activity
+            android:name=".AppsActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:excludeFromRecents="true">
 
-<activity
-    android:name=".MainActivity"
-    android:exported="false" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+        </activity>
+
+        <!-- OPTIONAL: setup / search entry -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
+    </application>
+
+</manifest>
