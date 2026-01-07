@@ -1,32 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<activity
+    android:name=".AppsActivity"
+    android:exported="true"
+    android:launchMode="singleTask">
 
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.HOME" />
+        <category android:name="android.intent.category.DEFAULT" />
+    </intent-filter>
 
-    <application
-        android:allowBackup="true"
-        android:label="@string/app_name"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher"
-        android:theme="@style/Theme.AuraLauncher">
+</activity>
 
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:launchMode="singleTask">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.HOME" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-
-        </activity>
-
-        <activity
-            android:name=".AppsActivity"
-            android:exported="false" />
-
-    </application>
-
-</manifest>
+<activity
+    android:name=".MainActivity"
+    android:exported="false" />
