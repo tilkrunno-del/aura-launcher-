@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.aura.launcher">
+
+    <!-- Vajalik, et launcher näeks kõiki rakendusi -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
     <application
         android:allowBackup="true"
-        android:label="AURA Launcher"
+        android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
+        android:roundIcon="@mipmap/ic_launcher"
         android:theme="@style/Theme.AuraLauncher">
 
-        <!-- LAUNCHER / HOME -->
+        <!-- AURA Launcher = HOME -->
         <activity
-            android:name=".AppsActivity"
+            android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTask"
-            android:taskAffinity=""
-            android:excludeFromRecents="true">
+            android:launchMode="singleTask">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,9 +26,9 @@
 
         </activity>
 
-        <!-- OPTIONAL: setup / search entry -->
+        <!-- Rakenduste nimekiri -->
         <activity
-            android:name=".MainActivity"
+            android:name=".AppsActivity"
             android:exported="false" />
 
     </application>
