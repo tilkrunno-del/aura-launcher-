@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -35,24 +36,26 @@ class AppsActivity : AppCompatActivity() {
         allApps.addAll(loadInstalledApps(packageManager))
 
         adapter = AppsAdapter(allApps) { app ->
-            // Käivita konkreetne activity (package + className)
-            val i = Intent().apply {
-                setClassName(app.packageName, app.className)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                val i = Intent().apply {
+                    setClassName(app.packageName, app.className)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(i)
+            } catch (e: Exception) {
+                Toast.makeText(this, "Ei saanud avada: ${app.label}", Toast.LENGTH_SHORT).show()
             }
-            startActivity(i)
         }
 
         recyclerView.adapter = adapter
 
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 adapter.filterApps(s?.toString().orEmpty())
             }
-
-            override fun afterTextChanged(s: Editable?) {}
         })
 
         val initialQuery = intent.getStringExtra(EXTRA_QUERY)
@@ -70,12 +73,16 @@ class AppsActivity : AppCompatActivity() {
 
         val resolved = pm.queryIntentActivities(intent, 0)
 
-        return resolved.map {
+        return resolved.map { ri ->
+            val pkg = ri.activityInfo.packageName
+            val rawName = ri.activityInfo.name
+            val fullName = if (rawName.startsWith(".")) pkg + rawName else rawName
+
             AppInfo(
-                label = it.loadLabel(pm).toString(),
-                packageName = it.activityInfo.packageName,
-                className = it.activityInfo.name,   // ✅ vajalik parameeter
-                icon = it.loadIcon(pm)
+                label = ri.loadLabel(pm).toString(),
+                packageName = pkg,
+                className = fullName,
+                icon = ri.loadIcon(pm)
             )
         }.sortedBy { it.label.lowercase() }
     }
