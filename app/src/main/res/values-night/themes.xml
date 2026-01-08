@@ -2,17 +2,9 @@
 <resources>
 
     <style name="Theme.Aura" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Dark mode taust -->
-        <item name="android:colorBackground">#121212</item>
-        <item name="android:windowBackground">#121212</item>
-
-        <!-- Tekst -->
-        <item name="android:textColorPrimary">#FFFFFF</item>
-        <item name="android:textColorSecondary">#BBBBBB</item>
-
-        <!-- Accent -->
-        <item name="colorPrimary">#7C4DFF</item>
-        <item name="colorSecondary">#03DAC6</item>
+        <item name="colorPrimary">#7C5CFF</item>
+        <item name="colorPrimaryDark">#5A3EDC</item>
+        <item name="colorAccent">#9A7DFF</item>
     </style>
 
 </resources>
