@@ -3,8 +3,10 @@ package com.aura.launcher
 import android.graphics.drawable.Drawable
 
 data class AppInfo(
-    val label: String,
     val packageName: String,
     val className: String,
-    val icon: Drawable
+    val label: String,
+    val icon: Drawable? = null,
+    val isFavorite: Boolean = false,
+    val isHidden: Boolean = false
 )
