@@ -32,7 +32,6 @@
             android:background="@android:color/transparent"
             android:padding="0dp" />
 
-        <!-- Luup (dekoratiivne) -->
         <ImageView
             android:layout_width="20dp"
             android:layout_height="20dp"
@@ -41,6 +40,27 @@
             android:contentDescription="@null"
             android:tint="@color/aura_muted" />
     </LinearLayout>
+
+    <!-- ⭐ LEMMIKUD -->
+    <TextView
+        android:id="@+id/favoritesTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Lemmikud"
+        android:textStyle="bold"
+        android:textColor="@color/aura_text"
+        android:layout_marginTop="12dp"
+        android:visibility="gone"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/favoritesRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:visibility="gone" />
 
     <!-- 📱 Rakenduste grid -->
     <androidx.recyclerview.widget.RecyclerView
