@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -16,28 +17,48 @@
         android:drawableEnd="@android:drawable/ic_menu_search"
         android:padding="12dp" />
 
-    <!-- Väike vahe -->
     <Space
         android:layout_width="match_parent"
         android:layout_height="12dp" />
 
-    <!-- Ava rakenduste nimekiri -->
     <Button
         android:id="@+id/btnOpenApps"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Ava rakendused" />
 
-    <!-- Väike vahe -->
     <Space
         android:layout_width="match_parent"
         android:layout_height="12dp" />
 
-    <!-- Määra vaikimisi launcher -->
     <Button
         android:id="@+id/btnSetDefaultLauncher"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Määra AURA vaikimisi avakuvarakenduseks" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="18dp" />
+
+    <!-- FOLLOW SYSTEM -->
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchFollowSystem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Kasuta süsteemi teemat (auto)"
+        android:padding="6dp" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="6dp" />
+
+    <!-- DARK MODE (aktiivne ainult siis, kui follow-system on OFF) -->
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchDarkMode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tume režiim"
+        android:padding="6dp" />
 
 </LinearLayout>
