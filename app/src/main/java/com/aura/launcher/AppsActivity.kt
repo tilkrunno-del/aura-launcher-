@@ -1,10 +1,11 @@
 package com.aura.launcher
 
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.EditText
+import android.widget.PopupMenu
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
@@ -31,18 +32,9 @@ class AppsActivity : AppCompatActivity() {
                 launchApp(app.packageName)
             },
             onLongPress = { view, app ->
-                AppContextMenu.show(
-                    context = this,
+                showAppMenu(
                     anchor = view,
-                    app = app,
-                    isFavorite = favoriteApps.contains(app.packageName),
-                    isHidden = hiddenApps.contains(app.packageName),
-                    onToggleFavorite = {
-                        toggleFavorite(app.packageName)
-                    },
-                    onToggleHidden = {
-                        toggleHidden(app.packageName)
-                    }
+                    app = app
                 )
             },
             isFavorite = { app ->
@@ -55,9 +47,42 @@ class AppsActivity : AppCompatActivity() {
 
         recyclerView.adapter = adapter
 
-        searchInput.addTextChangedListener {
-            adapter.filterApps(it.toString())
+        // FIX: TextWatcher mismatch / "it" unresolved
+        searchInput.doOnTextChanged { text, _, _, _ ->
+            adapter.filterApps(text?.toString().orEmpty())
         }
+    }
+
+    private fun showAppMenu(anchor: android.view.View, app: AppInfo) {
+        val popup = PopupMenu(this, anchor)
+
+        val isFav = favoriteApps.contains(app.packageName)
+        val isHid = hiddenApps.contains(app.packageName)
+
+        // Lisa menüü elemendid programmiliselt (ei vaja menu XML-i)
+        popup.menu.add(0, 1, 0, if (isFav) "Eemalda lemmik" else "Lisa lemmik")
+        popup.menu.add(0, 2, 1, if (isHid) "Too tagasi" else "Peida")
+        popup.menu.add(0, 3, 2, "App info")
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                1 -> {
+                    toggleFavorite(app.packageName)
+                    true
+                }
+                2 -> {
+                    toggleHidden(app.packageName)
+                    true
+                }
+                3 -> {
+                    openAppInfo(app.packageName)
+                    true
+                }
+                else -> false
+            }
+        }
+
+        popup.show()
     }
 
     private fun loadApps(): List<AppInfo> {
@@ -79,9 +104,14 @@ class AppsActivity : AppCompatActivity() {
 
     private fun launchApp(packageName: String) {
         val intent = packageManager.getLaunchIntentForPackage(packageName)
-        if (intent != null) {
-            startActivity(intent)
+        if (intent != null) startActivity(intent)
+    }
+
+    private fun openAppInfo(packageName: String) {
+        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = android.net.Uri.parse("package:$packageName")
         }
+        startActivity(intent)
     }
 
     private fun toggleFavorite(packageName: String) {
