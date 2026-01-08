@@ -2,8 +2,10 @@ package com.aura.launcher
 
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
+import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 
@@ -14,8 +16,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val searchInput = findViewById<EditText>(R.id.searchInput)
+        val btnOpenApps = findViewById<Button>(R.id.btnOpenApps)
+        val btnSetDefaultLauncher = findViewById<Button>(R.id.btnSetDefaultLauncher)
 
-        // Klaviatuuri Search / Done / Enter -> avab AppsActivity koos query-ga
+        // 🔍 Klaviatuuri Search / Enter
         searchInput.setOnEditorActionListener { _, actionId, event ->
             val imeAction =
                 actionId == EditorInfo.IME_ACTION_SEARCH ||
@@ -26,24 +30,28 @@ class MainActivity : AppCompatActivity() {
                 event.action == KeyEvent.ACTION_DOWN
 
             if (imeAction || enterKey) {
-                openApps(searchInput.text?.toString().orEmpty())
+                openApps(searchInput.text.toString())
                 true
             } else {
                 false
             }
         }
 
-        // Kui MainActivity käivitatakse query-ga (valikuline laiendus)
-        intent.getStringExtra(AppsActivity.EXTRA_QUERY)?.let { query ->
-            if (query.isNotBlank()) {
-                openApps(query)
-            }
+        // ▶️ Ava rakendused (nupp)
+        btnOpenApps.setOnClickListener {
+            openApps(searchInput.text.toString())
+        }
+
+        // 🏠 Määra AURA vaikimisi launcheriks (avab süsteemi seaded)
+        btnSetDefaultLauncher.setOnClickListener {
+            val intent = Intent(Settings.ACTION_HOME_SETTINGS)
+            startActivity(intent)
         }
     }
 
     private fun openApps(query: String) {
-        val i = Intent(this, AppsActivity::class.java)
-        i.putExtra(AppsActivity.EXTRA_QUERY, query.trim())
-        startActivity(i)
+        val intent = Intent(this, AppsActivity::class.java)
+        intent.putExtra(AppsActivity.EXTRA_QUERY, query.trim())
+        startActivity(intent)
     }
 }
