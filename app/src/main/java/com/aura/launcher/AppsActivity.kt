@@ -10,12 +10,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import java.util.Locale
 
 class AppsActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_QUERY = "EXTRA_QUERY"
+        private const val PREFS_NAME = "aura_launcher_prefs"
+        private const val KEY_HIDDEN_SET = "hidden_apps"
+        private const val HIDDEN_TRIGGER = "***" // kirjuta otsingusse *** et näha peidetud äppe
     }
 
     private lateinit var recyclerView: RecyclerView
@@ -23,6 +25,10 @@ class AppsActivity : AppCompatActivity() {
     private lateinit var adapter: AppsAdapter
 
     private val allApps = mutableListOf<AppInfo>()
+    private val visibleApps = mutableListOf<AppInfo>()
+    private val hiddenApps = mutableListOf<AppInfo>()
+
+    private var showingHidden = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,30 +37,45 @@ class AppsActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.appsRecyclerView)
         searchEditText = findViewById(R.id.searchEditText)
 
-        // ✅ 3 veergu
-        val spanCount = 3
-        recyclerView.layoutManager = GridLayoutManager(this, spanCount)
+        // 3 veergu (nagu sul juba “ok, 3 veergu”)
+        recyclerView.layoutManager = GridLayoutManager(this, 3)
+
+        adapter = AppsAdapter(
+            onAppClick = { app -> launchApp(app) },
+            onAppLongClick = { app -> toggleHidden(app) }
+        )
+        recyclerView.adapter = adapter
 
         // Lae äpid
         allApps.clear()
         allApps.addAll(loadInstalledApps(packageManager))
+        rebuildListsFromPrefs()
 
-        // ✅ Adapter (stagger jaoks anname spanCount kaasa)
-        adapter = AppsAdapter(
-            originalApps = allApps,
-            onAppClick = { app -> launchApp(app) },
-            spanCount = spanCount
-        )
-        recyclerView.adapter = adapter
-
-        // Otsing
+        // Otsing + hidden trigger
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun afterTextChanged(s: Editable?) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                adapter.filterApps(s?.toString().orEmpty())
-                recyclerView.scrollToPosition(0)
+                val q = s?.toString().orEmpty().trim()
+
+                if (q == HIDDEN_TRIGGER) {
+                    if (!showingHidden) {
+                        showingHidden = true
+                        adapter.submitApps(hiddenApps)
+                        adapter.filterApps("") // ära filtreeri *** sõna järgi
+                        Toast.makeText(this@AppsActivity, "Peidetud rakendused", Toast.LENGTH_SHORT).show()
+                    }
+                    return
+                }
+
+                if (showingHidden) {
+                    // kui lahkusid *** režiimist, mine tagasi nähtavate peale
+                    showingHidden = false
+                    adapter.submitApps(visibleApps)
+                }
+
+                adapter.filterApps(q)
             }
         })
 
@@ -63,32 +84,78 @@ class AppsActivity : AppCompatActivity() {
         if (!initialQuery.isNullOrBlank()) {
             searchEditText.setText(initialQuery)
             searchEditText.setSelection(initialQuery.length)
-            adapter.filterApps(initialQuery)
-            recyclerView.scrollToPosition(0)
+            // TextWatcher teeb ülejäänu ise
+        } else {
+            // kui query puudub, näita kohe nähtavaid
+            adapter.submitApps(visibleApps)
+            adapter.filterApps("")
         }
     }
 
     private fun launchApp(app: AppInfo) {
-        val pm = packageManager
-
-        // 1) Eelistatud viis
-        val primary = pm.getLaunchIntentForPackage(app.packageName)?.apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-
-        // 2) Fallback: konkreetne komponent
-        val fallback = Intent(Intent.ACTION_MAIN).apply {
+        val launchIntent = Intent(Intent.ACTION_MAIN).apply {
             addCategory(Intent.CATEGORY_LAUNCHER)
             setClassName(app.packageName, app.className)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-
         try {
-            startActivity(primary ?: fallback)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Ei saa avada: ${app.label}", Toast.LENGTH_SHORT).show()
+            startActivity(launchIntent)
+        } catch (_: Exception) {
+            Toast.makeText(this, "Ei saanud avada: ${app.label}", Toast.LENGTH_SHORT).show()
         }
     }
+
+    private fun toggleHidden(app: AppInfo) {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val set = prefs.getStringSet(KEY_HIDDEN_SET, emptySet())?.toMutableSet() ?: mutableSetOf()
+
+        val key = appKey(app)
+        val nowHidden: Boolean
+
+        if (set.contains(key)) {
+            set.remove(key)
+            nowHidden = false
+        } else {
+            set.add(key)
+            nowHidden = true
+        }
+
+        prefs.edit().putStringSet(KEY_HIDDEN_SET, set).apply()
+
+        rebuildListsFromPrefs()
+
+        if (showingHidden) {
+            adapter.submitApps(hiddenApps)
+            adapter.filterApps("") // hidden listis ei filtreeri automaatselt
+            Toast.makeText(this, if (nowHidden) "Peidetud" else "Tagasi toodud", Toast.LENGTH_SHORT).show()
+        } else {
+            adapter.submitApps(visibleApps)
+            // hoia praegune otsing alles
+            adapter.filterApps(searchEditText.text?.toString().orEmpty().trim())
+            Toast.makeText(this, if (nowHidden) "Peidetud: ${app.label}" else "Tagasi: ${app.label}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun rebuildListsFromPrefs() {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val hiddenSet = prefs.getStringSet(KEY_HIDDEN_SET, emptySet()) ?: emptySet()
+
+        visibleApps.clear()
+        hiddenApps.clear()
+
+        for (app in allApps) {
+            if (hiddenSet.contains(appKey(app))) hiddenApps.add(app) else visibleApps.add(app)
+        }
+
+        // kui adapter pole veel listi saanud, anna talle nähtavad
+        if (!showingHidden) {
+            adapter.submitApps(visibleApps)
+        } else {
+            adapter.submitApps(hiddenApps)
+        }
+    }
+
+    private fun appKey(app: AppInfo): String = "${app.packageName}/${app.className}"
 
     private fun loadInstalledApps(pm: PackageManager): List<AppInfo> {
         val intent = Intent(Intent.ACTION_MAIN, null).apply {
@@ -104,6 +171,6 @@ class AppsActivity : AppCompatActivity() {
                 className = ri.activityInfo.name,
                 icon = ri.loadIcon(pm)
             )
-        }.sortedBy { it.label.lowercase(Locale.getDefault()) }
+        }.sortedBy { it.label.lowercase() }
     }
 }
