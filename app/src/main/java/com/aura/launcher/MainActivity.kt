@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
         val btnOpenApps = findViewById<Button>(R.id.btnOpenApps)
         val btnSetDefaultLauncher = findViewById<Button>(R.id.btnSetDefaultLauncher)
 
-        // 🔍 Klaviatuuri Search / Enter
+        // Enter / Search / Done -> avab AppsActivity koos query-ga
         searchInput.setOnEditorActionListener { _, actionId, event ->
             val imeAction =
                 actionId == EditorInfo.IME_ACTION_SEARCH ||
@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
 
             val enterKey =
                 event?.keyCode == KeyEvent.KEYCODE_ENTER &&
-                event.action == KeyEvent.ACTION_DOWN
+                    event.action == KeyEvent.ACTION_DOWN
 
             if (imeAction || enterKey) {
                 openApps(searchInput.text.toString())
@@ -37,15 +37,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // ▶️ Ava rakendused (nupp)
+        // "Ava rakendused" nupp
         btnOpenApps.setOnClickListener {
             openApps(searchInput.text.toString())
         }
 
-        // 🏠 Määra AURA vaikimisi launcheriks (avab süsteemi seaded)
+        // "Määra AURA vaikimisi avakuvarakenduseks" -> viib Home/Launcher seadistusse
         btnSetDefaultLauncher.setOnClickListener {
-            val intent = Intent(Settings.ACTION_HOME_SETTINGS)
-            startActivity(intent)
+            startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
         }
     }
 
@@ -55,3 +54,4 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 }
+```0
