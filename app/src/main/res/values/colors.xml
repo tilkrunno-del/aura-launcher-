@@ -1,17 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="aura_bg">#FFFFFF</color>
+    <color name="aura_text">#111111</color>
+    <color name="aura_muted">#666666</color>
 
-    <!-- AURA palette -->
-    <color name="aura_background">#FFFFFFFF</color>
-
-    <!-- Aktsent (võid hiljem muuta) -->
-    <color name="aura_accent">#FF5A67FF</color>
-
-    <!-- Tekstid -->
-    <color name="aura_text_primary">#FF111827</color>
-    <color name="aura_text_secondary">#FF6B7280</color>
-
-    <!-- Listi eraldus -->
-    <color name="aura_divider">#FFE5E7EB</color>
-
+    <color name="aura_card">#FFFFFF</color>
+    <color name="aura_stroke">#22000000</color>
+    <color name="aura_badge">#0F000000</color>
 </resources>
