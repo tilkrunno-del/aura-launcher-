@@ -3,6 +3,7 @@ package com.aura.launcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -24,9 +25,19 @@ class AppsAdapter(
     override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
         val app = filteredApps[position]
         holder.bind(app)
+
         holder.itemView.setOnClickListener {
             onAppClick(app)
         }
+
+        // Fade + scale animatsioon
+        holder.itemView.clearAnimation()
+        holder.itemView.startAnimation(
+            AnimationUtils.loadAnimation(
+                holder.itemView.context,
+                R.anim.item_fade_scale_in
+            )
+        )
     }
 
     override fun getItemCount(): Int = filteredApps.size
