@@ -16,6 +16,21 @@ class AppsAdapter(
     private val isHidden: (AppInfo) -> Boolean
 ) : RecyclerView.Adapter<AppsAdapter.AppViewHolder>() {
 
+    // ✅ ÜHILDUVUS VANATE KUTSUNGITEGA (named args nagu onAppClick / onMenuAction)
+    constructor(
+        apps: List<AppInfo>,
+        onAppClick: (AppInfo) -> Unit,
+        onMenuAction: (View, AppInfo) -> Unit,
+        isFavorite: (AppInfo) -> Boolean = { false },
+        isHidden: (AppInfo) -> Boolean = { false }
+    ) : this(
+        apps = apps,
+        onClick = onAppClick,
+        onLongPress = onMenuAction,
+        isFavorite = isFavorite,
+        isHidden = isHidden
+    )
+
     private val allApps = apps.toMutableList()
     private val visibleApps = apps.toMutableList()
 
@@ -36,10 +51,7 @@ class AppsAdapter(
         holder.icon.setImageDrawable(app.icon)
         holder.name.text = app.label
 
-        holder.itemView.setOnClickListener {
-            onClick(app)
-        }
-
+        holder.itemView.setOnClickListener { onClick(app) }
         holder.itemView.setOnLongClickListener {
             onLongPress(it, app)
             true
@@ -58,9 +70,7 @@ class AppsAdapter(
         } else {
             val q = query.lowercase(Locale.getDefault())
             visibleApps.addAll(
-                allApps.filter {
-                    it.label.lowercase(Locale.getDefault()).contains(q)
-                }
+                allApps.filter { it.label.lowercase(Locale.getDefault()).contains(q) }
             )
         }
         notifyDataSetChanged()
