@@ -1,25 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/appsRoot"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingStart="14dp"
-    android:paddingEnd="14dp"
-    android:paddingTop="12dp"
-    android:paddingBottom="12dp"
     android:background="?android:colorBackground">
 
-    <!-- Search pill -->
+    <!-- Search bar -->
     <LinearLayout
-        android:id="@+id/searchContainer"
         android:layout_width="match_parent"
-        android:layout_height="52dp"
+        android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="10dp"
-        android:background="@android:drawable/editbox_background_normal">
+        android:padding="12dp"
+        android:gravity="center_vertical">
 
         <EditText
             android:id="@+id/searchEditText"
@@ -31,48 +24,27 @@
             android:inputType="text"
             android:singleLine="true"
             android:textColor="?android:textColorPrimary"
-            android:hintTextColor="?android:textColorSecondary"
+            android:textColorHint="?android:textColorSecondary"
             android:background="@android:color/transparent"
-            android:padding="0dp" />
+            android:padding="8dp" />
 
         <ImageView
-            android:id="@+id/searchIcon"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:layout_marginEnd="6dp"
-            android:src="@android:drawable/ic_menu_search"
-            android:tint="?android:textColorSecondary"
-            android:contentDescription="@null" />
-
-        <ImageButton
-            android:id="@+id/btnMore"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@android:color/transparent"
-            android:src="@android:drawable/ic_menu_more"
-            android:tint="?android:textColorSecondary"
-            android:contentDescription="@null" />
+            android:id="@+id/clearSearch"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:contentDescription="Clear search"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:tint="?android:textColorSecondary" />
     </LinearLayout>
 
-    <!-- Favorites pinned row -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/favoritesRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="92dp"
-        android:layout_marginTop="12dp"
-        android:clipToPadding="false"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp" />
-
-    <!-- All apps -->
+    <!-- Apps grid -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/appsRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="12dp"
         android:layout_weight="1"
-        android:clipToPadding="false"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp" />
+        android:padding="8dp"
+        android:clipToPadding="false" />
 
 </LinearLayout>
