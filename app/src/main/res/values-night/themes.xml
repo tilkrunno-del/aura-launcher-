@@ -1,26 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Põhivärvid (dark mode) -->
-    <color name="aura_primary">#BFA8FF</color>
-    <color name="aura_primary_dark">#9A7DFF</color>
-    <color name="aura_accent">#BFA8FF</color>
+    <!-- Taust -->
+    <color name="aura_bg">#121212</color>
 
-    <!-- Taustad -->
-    <color name="aura_background">#121212</color>
-    <color name="aura_card">#1E1E1E</color>
+    <!-- Tekst -->
+    <color name="aura_text">#FFFFFF</color>
+    <color name="aura_hint">#9E9E9E</color>
 
-    <!-- Tekstid -->
-    <color name="aura_text_primary">#FFFFFF</color>
-    <color name="aura_text_secondary">#B0B0B0</color>
-
-    <!-- Otsingu hint (FIX build error) -->
-    <color name="aura_hint">#B0B0B0</color>
-
-    <!-- Ikoonid -->
-    <color name="aura_icon_tint">#CCCCCC</color>
-
-    <!-- Divider / outline -->
-    <color name="aura_divider">#2C2C2C</color>
+    <!-- Aktsendid / jooned -->
+    <color name="aura_stroke">#2A2A2A</color>
+    <color name="aura_badge">#BFA8FF</color>
 
 </resources>
