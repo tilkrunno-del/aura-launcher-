@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Taust -->
-    <color name="aura_bg">#121212</color>
+    <style name="Theme.AuraLauncher" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- Night theme põhivärvid -->
+        <item name="colorPrimary">#2A2A2A</item>
+        <item name="colorPrimaryDark">#000000</item>
+        <item name="colorAccent">#BFA8FF</item>
 
-    <!-- Tekst -->
-    <color name="aura_text">#FFFFFF</color>
-    <color name="aura_hint">#9E9E9E</color>
-
-    <!-- Aktsendid / jooned -->
-    <color name="aura_stroke">#2A2A2A</color>
-    <color name="aura_badge">#BFA8FF</color>
+        <!-- Soovi korral: status bari ikoonid (dark taustal heledad) -->
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
 
 </resources>
