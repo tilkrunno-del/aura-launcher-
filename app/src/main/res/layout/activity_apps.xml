@@ -1,46 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/appsRoot"
+    android:id="@+id/apps_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/aura_bg"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@color/aura_bg"
+    android:padding="12dp">
 
-    <!-- Search -->
-    <LinearLayout
-        android:id="@+id/searchContainer"
+    <!-- Search field -->
+    <EditText
+        android:id="@+id/searchEditText"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:background="@drawable/bg_search"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="14dp"
-        android:paddingEnd="10dp">
+        android:hint="@string/search_apps"
+        android:inputType="text"
+        android:background="@android:drawable/edit_text"
+        android:textColor="@color/aura_text"
+        android:textSize="16sp"
+        android:padding="12dp" />
 
-        <EditText
-            android:id="@+id/searchInput"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            android:hint="@string/search_apps"
-            android:imeOptions="actionSearch"
-            android:inputType="text"
-            android:singleLine="true"
-            android:textColor="@color/aura_text"
-            android:textColorHint="@color/aura_hint"
-            android:textSize="16sp" />
-
-        <ImageButton
-            android:id="@+id/btnClear"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@android:color/transparent"
-            android:contentDescription="@string/clear_search"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:tint="@color/aura_hint" />
-    </LinearLayout>
+    <!-- Clear search -->
+    <Button
+        android:id="@+id/btnClearSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/clear_search"
+        android:layout_marginTop="8dp" />
 
     <!-- Apps grid -->
     <androidx.recyclerview.widget.RecyclerView
@@ -48,8 +33,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="12dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:paddingBottom="8dp" />
+        android:layout_weight="1" />
 
 </LinearLayout>
