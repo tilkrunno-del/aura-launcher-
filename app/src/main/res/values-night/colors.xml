@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Backgroundid -->
     <color name="aura_bg">#121212</color>
     <color name="aura_card">#1E1E1E</color>
 
-    <!-- Tekstid -->
     <color name="aura_text">#FFFFFF</color>
-    <color name="aura_hint">#9E9E9E</color>
+    <color name="aura_hint">#AAAAAA</color>
 
-    <!-- Piirjooned / aktsendid -->
-    <color name="aura_stroke">#2A2A2A</color>
+    <color name="aura_stroke">#2C2C2C</color>
     <color name="aura_badge">#BFA8FF</color>
+    <color name="aura_accent">#BFA8FF</color>
 
 </resources>
