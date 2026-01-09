@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Taust -->
+    <!-- Üldine taust -->
     <color name="aura_bg">#FFFFFF</color>
 
-    <!-- Tekst -->
-    <color name="aura_text">#1A1A1A</color>
-    <color name="aura_hint">#808080</color>
+    <!-- Kaardid / otsing -->
+    <color name="aura_card">#F4F4F6</color>
 
-    <!-- Aktsendid / jooned -->
+    <!-- Tekstid -->
+    <color name="aura_text">#1A1A1A</color>
+    <color name="aura_hint">#8A8A8A</color>
+
+    <!-- Jooned / outline -->
     <color name="aura_stroke">#D0D0D0</color>
+
+    <!-- Badge / aktsent -->
     <color name="aura_badge">#BFA8FF</color>
 
 </resources>
