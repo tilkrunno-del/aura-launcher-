@@ -1,97 +1,126 @@
 package com.aura.launcher
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
+import android.provider.Settings
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.PopupMenu
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
+import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import java.util.Locale
 
 class AppsActivity : AppCompatActivity() {
 
-    private lateinit var appsAdapter: AppsAdapter
-    private lateinit var favoritesAdapter: FavoritesAdapter
-
-    private lateinit var searchEditText: EditText
     private lateinit var appsRecyclerView: RecyclerView
     private lateinit var favoritesRecyclerView: RecyclerView
+    private lateinit var searchEditText: EditText
     private lateinit var btnMore: ImageButton
 
+    private lateinit var prefs: SharedPreferences
+
     private var allApps: List<AppInfo> = emptyList()
+
+    private lateinit var appsAdapter: AppsAdapter
+    private lateinit var favoritesAdapter: AppsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_apps)
 
-        searchEditText = findViewById(R.id.searchEditText)
+        prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+
         appsRecyclerView = findViewById(R.id.appsRecyclerView)
         favoritesRecyclerView = findViewById(R.id.favoritesRecyclerView)
+        searchEditText = findViewById(R.id.searchEditText)
         btnMore = findViewById(R.id.btnMore)
 
-        // Grid 3 veergu (sa saad selle hiljem seadistusse viia)
-        appsRecyclerView.layoutManager = GridLayoutManager(this, 3)
-
-        // Favorites row: horisontaalne
+        // Favoriidid (pinned row)
         favoritesRecyclerView.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
-        // Lae äpid
-        allApps = loadApps()
+        // Kõik äpid (grid)
+        appsRecyclerView.layoutManager = GridLayoutManager(this, 3)
 
-        // Apps grid adapter
-        appsAdapter = AppsAdapter(
-            apps = allApps,
-            onClick = { app ->
-                launchApp(app)
-            },
-            onLongPress = { view, app ->
-                showAppMenu(view, app)
-            },
-            isFavorite = { app ->
-                AppPrefs.isFavorite(this, makeKey(app))
-            },
-            isHidden = { app ->
-                AppPrefs.isHidden(this, makeKey(app))
-            }
+        // Adapters
+        favoritesAdapter = AppsAdapter(
+            apps = emptyList(),
+            onClick = { app -> launchApp(app) },
+            onLongPress = { anchor, app -> showAppMenu(anchor, app) },
+            isFavorite = { isFavorite(it) },
+            isHidden = { isHidden(it) }
         )
+
+        appsAdapter = AppsAdapter(
+            apps = emptyList(),
+            onClick = { app -> launchApp(app) },
+            onLongPress = { anchor, app -> showAppMenu(anchor, app) },
+            isFavorite = { isFavorite(it) },
+            isHidden = { isHidden(it) }
+        )
+
+        favoritesRecyclerView.adapter = favoritesAdapter
         appsRecyclerView.adapter = appsAdapter
 
-        // Favorites adapter (kasutab sama item_app.xml)
-        favoritesAdapter = FavoritesAdapter(
-            items = mutableListOf(),
-            onClick = { app -> launchApp(app) },
-            onLongPress = { view, app -> showFavoriteMenu(view, app) }
-        )
-        favoritesRecyclerView.adapter = favoritesAdapter
+        // Otsing
+        searchEditText.addTextChangedListener { text ->
+            val q = text?.toString().orEmpty()
+            appsAdapter.filterApps(q)
 
-        // Täida pinned row kohe
-        refreshFavoritesRow()
-
-        // 🔍 OTSING (kindel TextWatcher, ei sõltu ktx-ist)
-        searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun afterTextChanged(s: Editable?) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                appsAdapter.filterApps(s?.toString().orEmpty())
+            // Kui tahad, et pinned row filtreerub ka otsinguga:
+            // - kui otsing tühi -> näita tavalisi favoriite
+            // - kui otsinguga -> näita ainult sobivaid favoriite
+            if (q.isBlank()) {
+                refreshFavoritesRow()
+            } else {
+                val favKeys = getFavorites()
+                val favApps = allApps
+                    .filter { favKeys.contains(makeKey(it)) }
+                    .filter { it.label.contains(q, ignoreCase = true) }
+                favoritesAdapter.submitList(favApps)
+                favoritesRecyclerView.visibility = if (favApps.isEmpty()) View.GONE else View.VISIBLE
             }
-        })
+        }
 
-        // ☰ ülemine menüü
-        btnMore.setOnClickListener { showTopMenu(it) }
+        btnMore.setOnClickListener { v ->
+            val menu = PopupMenu(this, v)
+            menu.menu.add(0, MENU_REFRESH, 0, "Värskenda loend")
+            menu.menu.add(0, MENU_CLEAR_SEARCH, 1, "Tühjenda otsing")
+            menu.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    MENU_REFRESH -> {
+                        loadApps()
+                        true
+                    }
+                    MENU_CLEAR_SEARCH -> {
+                        searchEditText.setText("")
+                        true
+                    }
+                    else -> false
+                }
+            }
+            menu.show()
+        }
+
+        loadApps()
     }
 
-    // ----------------------------
-    // Lae kõik launcher-äpid
-    // ----------------------------
-    private fun loadApps(): List<AppInfo> {
+    private fun loadApps() {
+        allApps = getInstalledLaunchableApps()
+
+        // Peida hidden-id listist (soovi korral)
+        val filtered = allApps.filterNot { isHidden(it) }
+
+        appsAdapter.submitList(filtered)
+        refreshFavoritesRow()
+    }
+
+    private fun getInstalledLaunchableApps(): List<AppInfo> {
         val pm = packageManager
         val intent = Intent(Intent.ACTION_MAIN, null).apply {
             addCategory(Intent.CATEGORY_LAUNCHER)
@@ -101,146 +130,113 @@ class AppsActivity : AppCompatActivity() {
             .map { ri ->
                 AppInfo(
                     packageName = ri.activityInfo.packageName,
-                    className = ri.activityInfo.name,
+                    className = ri.activityInfo.name, // <-- SEE parandab "className missing" vea
                     label = ri.loadLabel(pm).toString(),
                     icon = ri.loadIcon(pm)
                 )
             }
-            .sortedBy { it.label.lowercase(Locale.getDefault()) }
+            .sortedBy { it.label.lowercase() }
     }
 
-    // ----------------------------
-    // Favorites row update
-    // ----------------------------
     private fun refreshFavoritesRow() {
-        val favKeys = AppPrefs.getFavorites(this)
-        val favApps = allApps
-            .filter { favKeys.contains(makeKey(it)) }
-            .sortedBy { it.label.lowercase(Locale.getDefault()) }
+        val favKeys = getFavorites()
+        val favApps = allApps.filter { favKeys.contains(makeKey(it)) }
 
         favoritesAdapter.submitList(favApps)
-
-        // Kui lemmikuid pole, võid rea peita (soovi korral)
         favoritesRecyclerView.visibility = if (favApps.isEmpty()) View.GONE else View.VISIBLE
     }
 
-    // ----------------------------
-    // App launch / info
-    // ----------------------------
     private fun launchApp(app: AppInfo) {
-        val intent = Intent(Intent.ACTION_MAIN).apply {
-            addCategory(Intent.CATEGORY_LAUNCHER)
-            setClassName(app.packageName, app.className)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
         try {
+            val intent = Intent().apply {
+                setClassName(app.packageName, app.className)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
             startActivity(intent)
-        } catch (_: Exception) {
+        } catch (_: Throwable) {
+            // fallback
             val fallback = packageManager.getLaunchIntentForPackage(app.packageName)
             if (fallback != null) startActivity(fallback)
         }
     }
 
-    private fun openAppInfo(packageName: String) {
-        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            data = Uri.parse("package:$packageName")
+    private fun openAppInfo(app: AppInfo) {
+        val i = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.parse("package:${app.packageName}")
         }
-        startActivity(intent)
+        startActivity(i)
     }
 
-    // ----------------------------
-    // Long-press menüü gridis
-    // ----------------------------
     private fun showAppMenu(anchor: View, app: AppInfo) {
-        val key = makeKey(app)
-        val isFav = AppPrefs.isFavorite(this, key)
-        val isHid = AppPrefs.isHidden(this, key)
+        val menu = PopupMenu(this, anchor)
 
-        val popup = PopupMenu(this, anchor)
+        val favNow = isFavorite(app)
+        val hiddenNow = isHidden(app)
 
-        popup.menu.add(0, 1, 0, if (isFav) "Eemalda lemmikutest" else "Lisa lemmikutesse")
-        popup.menu.add(0, 2, 1, if (isHid) "Too tagasi" else "Peida")
-        popup.menu.add(0, 3, 2, "Rakenduse info")
+        menu.menu.add(0, MENU_TOGGLE_FAVORITE, 0, if (favNow) "Eemalda lemmikutest" else "Lisa lemmikutesse")
+        menu.menu.add(0, MENU_TOGGLE_HIDDEN, 1, if (hiddenNow) "Näita (unhide)" else "Peida (hide)")
+        menu.menu.add(0, MENU_APP_INFO, 2, "Rakenduse info")
 
-        popup.setOnMenuItemClickListener { item ->
+        menu.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                1 -> {
-                    AppPrefs.toggleFavorite(this, key)
+                MENU_TOGGLE_FAVORITE -> {
+                    toggleFavorite(app)
                     refreshFavoritesRow()
-                    appsAdapter.notifyDataSetChanged()
                     true
                 }
-                2 -> {
-                    AppPrefs.toggleHidden(this, key)
-                    // refresh list: peidetud võiks hiljem päriselt listist eemaldada
-                    appsAdapter.notifyDataSetChanged()
+                MENU_TOGGLE_HIDDEN -> {
+                    toggleHidden(app)
+                    loadApps()
                     true
                 }
-                3 -> {
-                    openAppInfo(app.packageName)
+                MENU_APP_INFO -> {
+                    openAppInfo(app)
                     true
                 }
                 else -> false
             }
         }
 
-        popup.show()
+        menu.show()
     }
 
-    // ----------------------------
-    // Long-press menüü lemmikureas
-    // ----------------------------
-    private fun showFavoriteMenu(anchor: View, app: AppInfo) {
+    // ====== Favorites / Hidden storage ======
+
+    private fun makeKey(app: AppInfo): String = "${app.packageName}/${app.className}"
+
+    private fun getFavorites(): Set<String> =
+        prefs.getStringSet(KEY_FAVORITES, emptySet()) ?: emptySet()
+
+    private fun getHidden(): Set<String> =
+        prefs.getStringSet(KEY_HIDDEN, emptySet()) ?: emptySet()
+
+    private fun isFavorite(app: AppInfo): Boolean = getFavorites().contains(makeKey(app))
+    private fun isHidden(app: AppInfo): Boolean = getHidden().contains(makeKey(app))
+
+    private fun toggleFavorite(app: AppInfo) {
         val key = makeKey(app)
-        val popup = PopupMenu(this, anchor)
-
-        popup.menu.add(0, 1, 0, "Eemalda lemmikutest")
-        popup.menu.add(0, 2, 1, "Rakenduse info")
-
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                1 -> {
-                    AppPrefs.toggleFavorite(this, key) // eemaldab
-                    refreshFavoritesRow()
-                    appsAdapter.notifyDataSetChanged()
-                    true
-                }
-                2 -> {
-                    openAppInfo(app.packageName)
-                    true
-                }
-                else -> false
-            }
-        }
-
-        popup.show()
+        val set = getFavorites().toMutableSet()
+        if (set.contains(key)) set.remove(key) else set.add(key)
+        prefs.edit().putStringSet(KEY_FAVORITES, set).apply()
     }
 
-    // ----------------------------
-    // Ülemine menüü (☰)
-    // ----------------------------
-    private fun showTopMenu(anchor: View) {
-        val popup = PopupMenu(this, anchor)
-
-        popup.menu.add(0, 1, 0, "Seaded")
-        popup.menu.add(0, 2, 1, "Peidetud rakendused")
-
-        popup.setOnMenuItemClickListener {
-            when (it.itemId) {
-                1 -> {
-                    startActivity(Intent(this, SettingsActivity::class.java))
-                    true
-                }
-                2 -> {
-                    startActivity(Intent(this, HiddenAppsActivity::class.java))
-                    true
-                }
-                else -> false
-            }
-        }
-
-        popup.show()
+    private fun toggleHidden(app: AppInfo) {
+        val key = makeKey(app)
+        val set = getHidden().toMutableSet()
+        if (set.contains(key)) set.remove(key) else set.add(key)
+        prefs.edit().putStringSet(KEY_HIDDEN, set).apply()
     }
 
-    private fun makeKey(app: AppInfo) = "${app.packageName}/${app.className}"
+    companion object {
+        private const val PREFS_NAME = "aura_launcher_prefs"
+        private const val KEY_FAVORITES = "favorites"
+        private const val KEY_HIDDEN = "hidden"
+
+        private const val MENU_TOGGLE_FAVORITE = 1
+        private const val MENU_TOGGLE_HIDDEN = 2
+        private const val MENU_APP_INFO = 3
+
+        private const val MENU_REFRESH = 10
+        private const val MENU_CLEAR_SEARCH = 11
+    }
 }
