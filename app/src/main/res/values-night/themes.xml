@@ -1,10 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.AuraLauncher" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <item name="colorPrimary">#2A2A2A</item>
-        <item name="colorPrimaryDark">#000000</item>
-        <item name="colorAccent">#BFA8FF</item>
-    </style>
+    <!-- Põhivärvid (dark mode) -->
+    <color name="aura_primary">#BFA8FF</color>
+    <color name="aura_primary_dark">#9A7DFF</color>
+    <color name="aura_accent">#BFA8FF</color>
+
+    <!-- Taustad -->
+    <color name="aura_background">#121212</color>
+    <color name="aura_card">#1E1E1E</color>
+
+    <!-- Tekstid -->
+    <color name="aura_text_primary">#FFFFFF</color>
+    <color name="aura_text_secondary">#B0B0B0</color>
+
+    <!-- Otsingu hint (FIX build error) -->
+    <color name="aura_hint">#B0B0B0</color>
+
+    <!-- Ikoonid -->
+    <color name="aura_icon_tint">#CCCCCC</color>
+
+    <!-- Divider / outline -->
+    <color name="aura_divider">#2C2C2C</color>
 
 </resources>
