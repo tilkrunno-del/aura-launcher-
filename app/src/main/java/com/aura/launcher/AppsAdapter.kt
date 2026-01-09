@@ -9,11 +9,11 @@ import androidx.recyclerview.widget.RecyclerView
 import java.util.Locale
 
 class AppsAdapter(
-    private val apps: List<AppInfo>,
+    apps: List<AppInfo>,
     private val onClick: (AppInfo) -> Unit,
-    private val onLongPress: (View, AppInfo) -> Unit,
-    private val isFavorite: (AppInfo) -> Boolean,
-    private val isHidden: (AppInfo) -> Boolean
+    private val onLongPress: (View, AppInfo) -> Unit = { _, _ -> },
+    private val isFavorite: (AppInfo) -> Boolean = { false },
+    private val isHidden: (AppInfo) -> Boolean = { false }
 ) : RecyclerView.Adapter<AppsAdapter.AppViewHolder>() {
 
     private val allApps = apps.toMutableList()
@@ -36,10 +36,7 @@ class AppsAdapter(
         holder.icon.setImageDrawable(app.icon)
         holder.name.text = app.label
 
-        holder.itemView.setOnClickListener {
-            onClick(app)
-        }
-
+        holder.itemView.setOnClickListener { onClick(app) }
         holder.itemView.setOnLongClickListener {
             onLongPress(it, app)
             true
@@ -56,11 +53,7 @@ class AppsAdapter(
             visibleApps.addAll(allApps)
         } else {
             val q = query.lowercase(Locale.getDefault())
-            visibleApps.addAll(
-                allApps.filter {
-                    it.label.lowercase(Locale.getDefault()).contains(q)
-                }
-            )
+            visibleApps.addAll(allApps.filter { it.label.lowercase(Locale.getDefault()).contains(q) })
         }
         notifyDataSetChanged()
     }
