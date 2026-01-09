@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Aura" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">#7C5CFF</item>
-        <item name="colorPrimaryDark">#5A3EDC</item>
-        <item name="colorAccent">#9A7DFF</item>
+    <style name="Theme.AuraLauncher" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">#2A2A2A</item>
+        <item name="colorPrimaryDark">#000000</item>
+        <item name="colorAccent">#BFA8FF</item>
     </style>
 
 </resources>
