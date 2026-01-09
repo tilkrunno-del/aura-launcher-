@@ -1,75 +1,69 @@
 package com.aura.launcher
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.PopupMenu
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.core.widget.doOnTextChanged
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class AppsActivity : AppCompatActivity() {
 
     private lateinit var appsAdapter: AppsAdapter
-    private lateinit var searchEditText: EditText
+
+    // Ajutine mälu (hiljem võib panna SharedPrefs / AppPrefs)
+    private val favoriteApps = mutableSetOf<String>()
+    private val hiddenApps = mutableSetOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_apps)
 
-        // ✅ Sinu XML ID-d
-        searchEditText = findViewById(R.id.searchEditText)
-        val appsRecyclerView = findViewById<RecyclerView>(R.id.appsRecyclerView)
-        val favoritesRecyclerView = findViewById<RecyclerView>(R.id.favoritesRecyclerView)
-        val btnMore = findViewById<ImageButton>(R.id.btnMore)
+        val searchEditText: EditText = findViewById(R.id.searchEditText)
+        val appsRecyclerView: RecyclerView = findViewById(R.id.appsRecyclerView)
+        val btnMore: ImageButton = findViewById(R.id.btnMore)
 
-        // Recyclerid
-        appsRecyclerView.layoutManager = LinearLayoutManager(this)
-        favoritesRecyclerView.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        // Grid 3 veergu
+        appsRecyclerView.layoutManager = GridLayoutManager(this, 3)
 
         val apps = loadApps()
 
         appsAdapter = AppsAdapter(
             apps = apps,
             onClick = { app ->
-                launchApp(app.packageName, app.className)
+                launchApp(app.packageName)
             },
             onLongPress = { view, app ->
-                openAppInfo(app.packageName)
+                showAppMenu(view, app)
             },
             isFavorite = { app ->
-                AppPrefs.isFavorite(this, app.packageName)
+                favoriteApps.contains(app.packageName)
             },
             isHidden = { app ->
-                AppPrefs.isHidden(this, app.packageName)
+                hiddenApps.contains(app.packageName)
             }
         )
 
         appsRecyclerView.adapter = appsAdapter
 
-        // (Praegu ei seo favoritesAdapterit, aga RecyclerView on valmis)
-        // Kui sul on FavoritesAdapter olemas, saad siia lisada.
+        // 🔍 OTSING – töötab
+        searchEditText.doOnTextChanged { text, _, _, _ ->
+            appsAdapter.filterApps(text?.toString().orEmpty())
+        }
 
-        // ✅ OTSING TÖÖLE (sinu EditText id)
-        searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun afterTextChanged(s: Editable?) = Unit
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                appsAdapter.filter(s?.toString().orEmpty())
-            }
-        })
-
-        // Menüü nupp (võid hiljem popup-menüü teha)
+        // ☰ Ülemine menüü (nt Settings / Hidden apps)
         btnMore.setOnClickListener {
-            // TODO: show menu
+            showTopMenu(it)
         }
     }
+
+    // ------------------------------------
+    // Andmete laadimine
+    // ------------------------------------
 
     private fun loadApps(): List<AppInfo> {
         val pm = packageManager
@@ -78,36 +72,116 @@ class AppsActivity : AppCompatActivity() {
         }
 
         return pm.queryIntentActivities(intent, 0)
-            .map { ri ->
+            .map {
                 AppInfo(
-                    packageName = ri.activityInfo.packageName,
-                    className = ri.activityInfo.name, // ✅ oluline: className
-                    label = ri.loadLabel(pm).toString(),
-                    icon = ri.loadIcon(pm)
+                    packageName = it.activityInfo.packageName,
+                    className = it.activityInfo.name,
+                    label = it.loadLabel(pm).toString(),
+                    icon = it.loadIcon(pm)
                 )
             }
             .sortedBy { it.label.lowercase() }
     }
 
-    private fun launchApp(packageName: String, className: String) {
-        // kindlam kui getLaunchIntentForPackage (mõnikord null)
-        val intent = Intent().apply {
-            setClassName(packageName, className)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        try {
-            startActivity(intent)
-        } catch (_: Exception) {
-            // fallback
-            val fallback = packageManager.getLaunchIntentForPackage(packageName)
-            if (fallback != null) startActivity(fallback)
-        }
+    // ------------------------------------
+    // App actions
+    // ------------------------------------
+
+    private fun launchApp(packageName: String) {
+        val intent = packageManager.getLaunchIntentForPackage(packageName)
+        if (intent != null) startActivity(intent)
     }
 
     private fun openAppInfo(packageName: String) {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            data = Uri.parse("package:$packageName")
+        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = android.net.Uri.parse("package:$packageName")
         }
         startActivity(intent)
+    }
+
+    // ------------------------------------
+    // Menüü – long press appil
+    // ------------------------------------
+
+    private fun showAppMenu(anchor: View, app: AppInfo) {
+        val popup = PopupMenu(this, anchor)
+
+        val isFav = favoriteApps.contains(app.packageName)
+        val isHidden = hiddenApps.contains(app.packageName)
+
+        popup.menu.add(
+            0, 1, 0,
+            if (isFav) "Eemalda lemmikutest" else "Lisa lemmikutesse"
+        )
+        popup.menu.add(
+            0, 2, 1,
+            if (isHidden) "Too tagasi" else "Peida"
+        )
+        popup.menu.add(0, 3, 2, "Rakenduse info")
+
+        popup.setOnMenuItemClickListener {
+            when (it.itemId) {
+                1 -> {
+                    toggleFavorite(app.packageName)
+                    true
+                }
+                2 -> {
+                    toggleHidden(app.packageName)
+                    true
+                }
+                3 -> {
+                    openAppInfo(app.packageName)
+                    true
+                }
+                else -> false
+            }
+        }
+
+        popup.show()
+    }
+
+    // ------------------------------------
+    // Ülemine menüü (☰)
+    // ------------------------------------
+
+    private fun showTopMenu(anchor: View) {
+        val popup = PopupMenu(this, anchor)
+
+        popup.menu.add(0, 1, 0, "Seaded")
+        popup.menu.add(0, 2, 1, "Peidetud rakendused")
+
+        popup.setOnMenuItemClickListener {
+            when (it.itemId) {
+                1 -> {
+                    startActivity(Intent(this, SettingsActivity::class.java))
+                    true
+                }
+                2 -> {
+                    startActivity(Intent(this, HiddenAppsActivity::class.java))
+                    true
+                }
+                else -> false
+            }
+        }
+
+        popup.show()
+    }
+
+    // ------------------------------------
+    // State muutmine
+    // ------------------------------------
+
+    private fun toggleFavorite(packageName: String) {
+        if (!favoriteApps.add(packageName)) {
+            favoriteApps.remove(packageName)
+        }
+        appsAdapter.notifyDataSetChanged()
+    }
+
+    private fun toggleHidden(packageName: String) {
+        if (!hiddenApps.add(packageName)) {
+            hiddenApps.remove(packageName)
+        }
+        appsAdapter.notifyDataSetChanged()
     }
 }
