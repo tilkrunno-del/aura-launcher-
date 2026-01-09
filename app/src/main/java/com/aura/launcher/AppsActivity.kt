@@ -1,72 +1,59 @@
 package com.aura.launcher
 
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
 import android.widget.EditText
-import android.widget.PopupMenu
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class AppsActivity : AppCompatActivity() {
 
     private lateinit var adapter: AppsAdapter
-    private val hiddenApps = mutableSetOf<String>()
-    private val favoriteApps = mutableSetOf<String>()
+    private lateinit var searchInput: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_apps)
 
-        val searchInput: EditText = findViewById(R.id.searchEditText)
-        val recyclerView: RecyclerView = findViewById(R.id.appsRecyclerView)
-
-        recyclerView.layoutManager = GridLayoutManager(this, 3)
+        val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewApps)
+        searchInput = findViewById(R.id.searchInput)
 
         val apps = loadApps()
 
         adapter = AppsAdapter(
             apps = apps,
-            onClick = { app -> launchApp(app.packageName) },
-            onLongPress = { view, app -> showAppMenu(view, app) },
-            isFavorite = { app -> favoriteApps.contains(app.packageName) },
-            isHidden = { app -> hiddenApps.contains(app.packageName) }
+            onClick = { app ->
+                launchApp(app.packageName)
+            },
+            onLongPress = { view, app ->
+                openAppInfo(app.packageName)
+            },
+            isFavorite = { app ->
+                AppPrefs.isFavorite(this, app.packageName)
+            },
+            isHidden = { app ->
+                AppPrefs.isHidden(this, app.packageName)
+            }
         )
 
+        recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
-        // KINDLAM kui doOnTextChanged
+        // ✅ Otsing tööle
         searchInput.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                adapter.filterApps(s?.toString().orEmpty())
+                adapter.filter(s?.toString().orEmpty())
             }
-            override fun afterTextChanged(s: Editable?) {}
+            override fun afterTextChanged(s: Editable?) = Unit
         })
-    }
-
-    private fun showAppMenu(anchor: android.view.View, app: AppInfo) {
-        val popup = PopupMenu(this, anchor)
-
-        val isFav = favoriteApps.contains(app.packageName)
-        val isHid = hiddenApps.contains(app.packageName)
-
-        popup.menu.add(0, 1, 0, if (isFav) "Eemalda lemmik" else "Lisa lemmik")
-        popup.menu.add(0, 2, 1, if (isHid) "Too tagasi" else "Peida")
-        popup.menu.add(0, 3, 2, "App info")
-
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                1 -> { toggleFavorite(app.packageName); true }
-                2 -> { toggleHidden(app.packageName); true }
-                3 -> { openAppInfo(app.packageName); true }
-                else -> false
-            }
-        }
-
-        popup.show()
     }
 
     private fun loadApps(): List<AppInfo> {
@@ -74,12 +61,14 @@ class AppsActivity : AppCompatActivity() {
         val intent = Intent(Intent.ACTION_MAIN, null).apply {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }
+
         return pm.queryIntentActivities(intent, 0)
-            .map {
+            .map { ri ->
                 AppInfo(
-                    label = it.loadLabel(pm).toString(),
-                    packageName = it.activityInfo.packageName,
-                    icon = it.loadIcon(pm)
+                    packageName = ri.activityInfo.packageName,
+                    className = ri.activityInfo.name, // ✅ OLULINE: see oli puudu
+                    label = ri.loadLabel(pm).toString(),
+                    icon = ri.loadIcon(pm)
                 )
             }
             .sortedBy { it.label.lowercase() }
@@ -87,23 +76,15 @@ class AppsActivity : AppCompatActivity() {
 
     private fun launchApp(packageName: String) {
         val intent = packageManager.getLaunchIntentForPackage(packageName)
-        if (intent != null) startActivity(intent)
+        if (intent != null) {
+            startActivity(intent)
+        }
     }
 
     private fun openAppInfo(packageName: String) {
-        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            data = android.net.Uri.parse("package:$packageName")
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.parse("package:$packageName")
         }
         startActivity(intent)
-    }
-
-    private fun toggleFavorite(packageName: String) {
-        if (!favoriteApps.add(packageName)) favoriteApps.remove(packageName)
-        adapter.notifyDataSetChanged()
-    }
-
-    private fun toggleHidden(packageName: String) {
-        if (!hiddenApps.add(packageName)) hiddenApps.remove(packageName)
-        adapter.notifyDataSetChanged()
     }
 }
