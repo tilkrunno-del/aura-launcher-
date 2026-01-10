@@ -1,18 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">AURA Launcher</string>
 
+    <string name="open_apps">AVA RAKENDUSED</string>
+    <string name="hidden_apps">PEIDETUD RAKENDUSED</string>
+
     <string name="search_apps">Otsi rakendust</string>
-    <string name="clear_search">Tühjenda</string>
+    <string name="clear_search">Tühjenda otsing</string>
 
-    <string name="aura_open">Ava</string>
-    <string name="aura_app_info">Äpi info</string>
-    <string name="aura_hide_app">Peida</string>
-    <string name="aura_show_app">Näita</string>
-    <string name="aura_add_favorite">Lisa lemmikuks</string>
-    <string name="aura_remove_favorite">Eemalda lemmikutest</string>
-    <string name="aura_uninstall">Eemalda</string>
-    <string name="aura_done">Valmis</string>
+    <string name="app_icon">App icon</string>
 
+    <string name="theme">Teema</string>
+    <string name="theme_follow_system">Kasuta süsteemi teemat</string>
+    <string name="theme_dark">Tume režiim</string>
+
+    <!-- Bottom sheet actions -->
+    <string name="aura_open">AVA</string>
+    <string name="aura_app_info">ÄPI INFO</string>
+    <string name="aura_add_favorite">LISA LEMMIKUKS</string>
+    <string name="aura_remove_favorite">EEMALDA LEMMIK</string>
+    <string name="aura_hide_app">PEIDA</string>
+    <string name="aura_show_app">NÄITA</string>
+    <string name="aura_uninstall">EEMALDA</string>
+    <string name="aura_done">VALMIS</string>
 </resources>
