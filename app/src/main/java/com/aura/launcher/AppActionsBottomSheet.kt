@@ -1,130 +1,99 @@
 package com.aura.launcher
 
-import android.content.Intent
-import android.net.Uri
+import android.content.Context
 import android.os.Bundle
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
+import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
-import androidx.core.view.isVisible
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.button.MaterialButton
 
 class AppActionsBottomSheet : BottomSheetDialogFragment() {
 
-    interface Callbacks {
-        fun onRequestRefresh()
-        fun onLaunch(app: AppInfo)
+    interface Callback {
+        fun onOpen(app: AppInfo)
+        fun onAppInfo(app: AppInfo)
+        fun onToggleFavorite(app: AppInfo, makeFavorite: Boolean)
+        fun onToggleHidden(app: AppInfo, makeHidden: Boolean)
+        fun onUninstall(app: AppInfo)
     }
 
-    private var callbacks: Callbacks? = null
+    private var callback: Callback? = null
+    private lateinit var app: AppInfo
 
-    fun setCallbacks(cb: Callbacks) {
-        callbacks = cb
-    }
+    override fun getTheme(): Int = R.style.ThemeOverlay_Aura_BottomSheet
 
-    companion object {
-        private const val ARG_PKG = "pkg"
-        private const val ARG_LABEL = "label"
-        private const val ARG_CLASS = "class"
-
-        fun newInstance(app: AppInfo): AppActionsBottomSheet {
-            val f = AppActionsBottomSheet()
-            f.arguments = Bundle().apply {
-                putString(ARG_PKG, app.packageName)
-                putString(ARG_LABEL, app.label)
-                putString(ARG_CLASS, app.className)
-            }
-            return f
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        callback = when {
+            parentFragment is Callback -> parentFragment as Callback
+            context is Callback -> context
+            else -> null
         }
     }
 
-    private fun requirePkg(): String = requireArguments().getString(ARG_PKG).orEmpty()
-    private fun requireLabel(): String = requireArguments().getString(ARG_LABEL).orEmpty()
-    private fun requireClass(): String = requireArguments().getString(ARG_CLASS).orEmpty()
-
-    override fun getTheme(): Int = R.style.ThemeOverlay_Aura_BottomSheet
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        app = requireArguments().getParcelableCompat(ARG_APP)
+            ?: error("AppInfo missing")
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.bottomsheet_app_actions, container, false)
-    }
+        val v = inflater.inflate(R.layout.bottomsheet_app_actions, container, false)
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val pkg = requirePkg()
-        val label = requireLabel()
+        val title: TextView = v.findViewById(R.id.bsTitle)
+        val sub: TextView = v.findViewById(R.id.bsSubtitle)
 
-        val icon = view.findViewById<ImageView>(R.id.bsIcon)
-        val title = view.findViewById<TextView>(R.id.bsTitle)
-        val subtitle = view.findViewById<TextView>(R.id.bsSubtitle)
+        val btnOpen: Button = v.findViewById(R.id.btnOpen)
+        val btnInfo: Button = v.findViewById(R.id.btnAppInfo)
+        val btnFav: Button = v.findViewById(R.id.btnFavorite)
+        val btnHide: Button = v.findViewById(R.id.btnHideShow)
+        val btnUninstall: Button = v.findViewById(R.id.btnUninstall)
 
-        val btnOpen = view.findViewById<MaterialButton>(R.id.bsOpen)
-        val btnInfo = view.findViewById<MaterialButton>(R.id.bsInfo)
-        val btnUninstall = view.findViewById<MaterialButton>(R.id.bsUninstall)
-        val btnFav = view.findViewById<MaterialButton>(R.id.bsFavorite)
-        val btnHide = view.findViewById<MaterialButton>(R.id.bsHide)
+        title.text = app.label
+        sub.text = "${app.packageName}\n${app.className}"
 
-        title.text = label.ifBlank { pkg }
-        subtitle.text = pkg
+        val isFav = AppStateStore.isFavorite(requireContext(), app.packageName)
+        val isHidden = AppStateStore.isHidden(requireContext(), app.packageName)
 
-        // Icon
-        try {
-            val d = requireContext().packageManager.getApplicationIcon(pkg)
-            icon.setImageDrawable(d)
-        } catch (_: Throwable) {
-            icon.setImageResource(android.R.drawable.sym_def_app_icon)
-        }
+        btnFav.text = if (isFav) getString(R.string.aura_remove_favorite) else getString(R.string.aura_add_favorite)
+        btnHide.text = if (isHidden) getString(R.string.aura_show_app) else getString(R.string.aura_hide_app)
 
-        fun refreshButtons() {
-            val fav = AppPrefs.isFavorite(requireContext(), pkg)
-            val hid = AppPrefs.isHidden(requireContext(), pkg)
+        btnOpen.setOnClickListener { callback?.onOpen(app); dismiss() }
+        btnInfo.setOnClickListener { callback?.onAppInfo(app); dismiss() }
 
-            btnFav.text = if (fav) getString(R.string.aura_remove_favorite) else getString(R.string.aura_add_favorite)
-            btnHide.text = if (hid) getString(R.string.aura_show_app) else getString(R.string.aura_hide_app)
-
-            // kui on hidden, siis Open nupp jääb alles (soovi korral)
-            btnOpen.isVisible = true
-        }
-
-        refreshButtons()
-
-        btnOpen.setOnClickListener {
-            callbacks?.onLaunch(AppInfo(pkg, requireClass(), label, null))
+        btnFav.setOnClickListener {
+            callback?.onToggleFavorite(app, !isFav)
             dismiss()
         }
 
-        btnInfo.setOnClickListener {
-            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                data = Uri.parse("package:$pkg")
-            }
-            startActivity(intent)
+        btnHide.setOnClickListener {
+            callback?.onToggleHidden(app, !isHidden)
+            dismiss()
         }
 
         btnUninstall.setOnClickListener {
-            val intent = Intent(Intent.ACTION_DELETE).apply {
-                data = Uri.parse("package:$pkg")
+            callback?.onUninstall(app)
+            dismiss()
+        }
+
+        return v
+    }
+
+    companion object {
+        private const val ARG_APP = "arg_app"
+
+        fun newInstance(app: AppInfo): AppActionsBottomSheet {
+            return AppActionsBottomSheet().apply {
+                arguments = Bundle().apply {
+                    putParcelableCompat(ARG_APP, app)
+                }
             }
-            startActivity(intent)
-        }
-
-        btnFav.setOnClickListener {
-            AppPrefs.toggleFavorite(requireContext(), pkg)
-            refreshButtons()
-            callbacks?.onRequestRefresh()
-        }
-
-        btnHide.setOnClickListener {
-            AppPrefs.toggleHidden(requireContext(), pkg)
-            refreshButtons()
-            callbacks?.onRequestRefresh()
-            Toast.makeText(requireContext(), getString(R.string.aura_done), Toast.LENGTH_SHORT).show()
         }
     }
 }
