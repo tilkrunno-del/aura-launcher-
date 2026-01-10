@@ -1,26 +1,13 @@
-<style name="AuraButton" parent="Widget.MaterialComponents.Button">
-    <item name="android:insetLeft">0dp</item>
-    <item name="android:insetRight">0dp</item>
-    <item name="android:minHeight">48dp</item>
-    <item name="cornerRadius">14dp</item>
-    <item name="backgroundTint">@color/aura_primary</item>
-    <item name="android:textColor">@color/aura_on_primary</item>
-    <item name="android:textAllCaps">false</item>
-</style>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
 
-<style name="AuraButton_Secondary" parent="Widget.MaterialComponents.Button.OutlinedButton">
-    <item name="android:minHeight">48dp</item>
-    <item name="cornerRadius">14dp</item>
-    <item name="strokeColor">@color/aura_primary</item>
-    <item name="strokeWidth">1dp</item>
-    <item name="android:textColor">@color/aura_primary</item>
-    <item name="android:textAllCaps">false</item>
-</style>
+    <!-- Base application theme -->
+    <style name="Theme.AuraLauncher" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/aura_primary</item>
+        <item name="colorOnPrimary">@color/aura_on_primary</item>
 
-<style name="AuraButton_Danger" parent="Widget.MaterialComponents.Button">
-    <item name="android:minHeight">48dp</item>
-    <item name="cornerRadius">14dp</item>
-    <item name="backgroundTint">@color/aura_danger</item>
-    <item name="android:textColor">@color/aura_on_danger</item>
-    <item name="android:textAllCaps">false</item>
-</style>
+        <item name="android:windowBackground">@color/aura_bg</item>
+        <item name="android:textColorPrimary">@color/aura_text</item>
+    </style>
+
+</resources>
