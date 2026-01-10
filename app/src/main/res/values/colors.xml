@@ -1,26 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
+<color name="aura_sheet">#F2F2F7</color>
+<color name="aura_surface">#FFFFFF</color>
+<color name="aura_text_hint">#7A7A85</color>
 
-    <!-- Backgrounds -->
-    <color name="aura_bg">#F6F7FB</color>
-    <color name="aura_surface">#FFFFFF</color>
-    <color name="aura_card">#EEF2FF</color>
-    <color name="aura_sheet">#F1F5FF</color>
+<color name="aura_primary">#7C4DFF</color>
+<color name="aura_on_primary">#FFFFFF</color>
 
-    <!-- Text -->
-    <color name="aura_text">#0F172A</color>
-    <color name="aura_text_secondary">#475569</color>
-    <color name="aura_text_hint">#94A3B8</color>
-
-    <!-- Accent -->
-    <color name="aura_accent">#A78BFA</color>
-    <color name="aura_accent_dark">#7C3AED</color>
-
-    <!-- States -->
-    <color name="aura_danger">#EF4444</color>
-    <color name="aura_success">#22C55E</color>
-
-    <!-- Search -->
-    <color name="aura_search_bg">#FFFFFF</color>
-
-</resources>
+<color name="aura_danger">#D32F2F</color>
+<color name="aura_on_danger">#FFFFFF</color>
