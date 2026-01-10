@@ -1,4 +1,16 @@
-<string name="aura_open">Ava</string>
-<string name="aura_app_info">Äpi info</string>
-<string name="aura_hide_app">Peida äpp</string>
-<string name="aura_uninstall">Eemalda</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">AURA Launcher</string>
+
+    <!-- Search -->
+    <string name="search_apps">Otsi rakendust</string>
+    <string name="clear_search">Tühjenda</string>
+
+    <!-- App actions -->
+    <string name="aura_open">Ava</string>
+    <string name="aura_app_info">Rakenduse info</string>
+    <string name="aura_hide_app">Peida rakendus</string>
+    <string name="aura_uninstall">Eemalda</string>
+
+</resources>
