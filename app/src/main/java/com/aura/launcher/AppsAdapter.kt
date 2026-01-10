@@ -22,6 +22,7 @@ class AppsAdapter(
     inner class AppViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val icon: ImageView = view.findViewById(R.id.appIcon)
         val name: TextView = view.findViewById(R.id.appName)
+        val badge: View? = view.findViewById<View?>(R.id.appBadge) // kui lisad badge view
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
@@ -42,46 +43,39 @@ class AppsAdapter(
             true
         }
 
-        // Kui on peidetud, tee läbipaistvaks
-        holder.itemView.alpha = if (isHidden(app)) 0.4f else 1f
+        val hidden = isHidden(app)
+        holder.itemView.alpha = if (hidden) 0.35f else 1f
 
-        // (Kui hiljem tahad favorite märki / badge'i, siis kasuta isFavorite(app))
-        // val fav = isFavorite(app)
+        // Lemmiku badge (kui item_app.xml-is olemas)
+        holder.badge?.visibility = if (isFavorite(app)) View.VISIBLE else View.GONE
     }
 
     override fun getItemCount(): Int = visibleApps.size
 
-    /**
-     * Otsing: otsib nii nime (label) kui ka packageName järgi.
-     */
     fun filterApps(query: String) {
-        visibleApps.clear()
+        val q = query.trim().lowercase(Locale.getDefault())
 
-        if (query.isBlank()) {
-            visibleApps.addAll(allApps)
+        visibleApps.clear()
+        val base = allApps.filter { !isHidden(it) }
+
+        if (q.isBlank()) {
+            visibleApps.addAll(base)
         } else {
-            val q = query.lowercase(Locale.getDefault()).trim()
             visibleApps.addAll(
-                allApps.filter { app ->
-                    app.label.lowercase(Locale.getDefault()).contains(q) ||
-                        app.packageName.lowercase(Locale.getDefault()).contains(q)
+                base.filter {
+                    it.label.lowercase(Locale.getDefault()).contains(q) ||
+                        it.packageName.lowercase(Locale.getDefault()).contains(q)
                 }
             )
         }
-
         notifyDataSetChanged()
     }
 
-    /**
-     * Uus list (näiteks kui AppsActivity laeb äpid uuesti).
-     */
     fun submitList(newList: List<AppInfo>) {
         allApps.clear()
         allApps.addAll(newList)
-
         visibleApps.clear()
         visibleApps.addAll(newList)
-
         notifyDataSetChanged()
     }
 }
