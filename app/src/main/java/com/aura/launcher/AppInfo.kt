@@ -1,12 +1,14 @@
 package com.aura.launcher
 
 import android.graphics.drawable.Drawable
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class AppInfo(
     val packageName: String,
     val className: String,
     val label: String,
-    val icon: Drawable? = null,
-    val isFavorite: Boolean = false,
-    val isHidden: Boolean = false
-)
+    @kotlinx.parcelize.IgnoredOnParcel
+    val icon: Drawable? = null
+) : Parcelable
