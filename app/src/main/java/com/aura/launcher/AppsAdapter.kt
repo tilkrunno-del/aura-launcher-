@@ -22,7 +22,7 @@ class AppsAdapter(
     inner class AppViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val icon: ImageView = view.findViewById(R.id.appIcon)
         val name: TextView = view.findViewById(R.id.appName)
-        val badge: View? = view.findViewById<View?>(R.id.appBadge) // kui lisad badge view
+        val badge: View = view.findViewById(R.id.appBadge) // <-- olemas layoutis
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
@@ -43,30 +43,22 @@ class AppsAdapter(
             true
         }
 
-        val hidden = isHidden(app)
-        holder.itemView.alpha = if (hidden) 0.35f else 1f
+        // hidden alpha
+        holder.itemView.alpha = if (isHidden(app)) 0.45f else 1f
 
-        // Lemmiku badge (kui item_app.xml-is olemas)
-        holder.badge?.visibility = if (isFavorite(app)) View.VISIBLE else View.GONE
+        // badge = favorite (näita väike täpp)
+        holder.badge.visibility = if (isFavorite(app)) View.VISIBLE else View.GONE
     }
 
     override fun getItemCount(): Int = visibleApps.size
 
     fun filterApps(query: String) {
-        val q = query.trim().lowercase(Locale.getDefault())
-
         visibleApps.clear()
-        val base = allApps.filter { !isHidden(it) }
-
-        if (q.isBlank()) {
-            visibleApps.addAll(base)
+        if (query.isBlank()) {
+            visibleApps.addAll(allApps)
         } else {
-            visibleApps.addAll(
-                base.filter {
-                    it.label.lowercase(Locale.getDefault()).contains(q) ||
-                        it.packageName.lowercase(Locale.getDefault()).contains(q)
-                }
-            )
+            val q = query.lowercase(Locale.getDefault())
+            visibleApps.addAll(allApps.filter { it.label.lowercase(Locale.getDefault()).contains(q) })
         }
         notifyDataSetChanged()
     }
@@ -78,4 +70,6 @@ class AppsAdapter(
         visibleApps.addAll(newList)
         notifyDataSetChanged()
     }
+
+    fun getVisibleList(): List<AppInfo> = visibleApps.toList()
 }
