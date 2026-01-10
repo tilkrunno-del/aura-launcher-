@@ -1,45 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- ================= BACKGROUNDS ================= -->
+    <!-- Backgrounds -->
     <color name="aura_bg">#F5F5F7</color>
     <color name="aura_surface">#FFFFFF</color>
     <color name="aura_sheet">#F2F2F7</color>
-    <color name="aura_card">#FFFFFF</color>
 
-    <!-- ================= TEXT ================= -->
+    <!-- Text -->
     <color name="aura_text">#1C1C1E</color>
-    <color name="aura_text_secondary">#3C3C43</color>
     <color name="aura_text_hint">#7A7A85</color>
-    <color name="aura_text_disabled">#B0B0B8</color>
 
-    <!-- ================= PRIMARY / ACCENT ================= -->
+    <!-- Primary / Accent -->
     <color name="aura_primary">#7C4DFF</color>
-    <color name="aura_primary_dark">#5E35B1</color>
     <color name="aura_on_primary">#FFFFFF</color>
-
     <color name="aura_accent">#9B7CFF</color>
     <color name="aura_accent_dark">#7C4DFF</color>
 
-    <!-- ================= BORDERS / DIVIDERS ================= -->
-    <color name="aura_outline">#E0E0E5</color>
-    <color name="aura_divider">#E6E6EB</color>
+    <!-- UI lines -->
+    <color name="aura_divider">#1A000000</color>
 
-    <!-- ================= SEARCH ================= -->
-    <color name="aura_search_bg">#FFFFFF</color>
-    <color name="aura_search_border">#D1D1D6</color>
-
-    <!-- ================= BUTTONS ================= -->
-    <color name="aura_button">#7C4DFF</color>
-    <color name="aura_button_text">#FFFFFF</color>
-    <color name="aura_button_secondary">#EDE7FF</color>
-
-    <!-- ================= DANGER ================= -->
+    <!-- Danger -->
     <color name="aura_danger">#D32F2F</color>
     <color name="aura_on_danger">#FFFFFF</color>
-
-    <!-- ================= BADGE / HIGHLIGHT ================= -->
-    <color name="aura_badge">#FF5252</color>
-    <color name="aura_on_badge">#FFFFFF</color>
 
 </resources>
