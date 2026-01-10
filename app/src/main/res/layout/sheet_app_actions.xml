@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/app_actions_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/aura_bg">
+
+    <!-- App name -->
+    <TextView
+        android:id="@+id/appTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/app_actions"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/aura_text"
+        android:paddingBottom="12dp" />
+
+    <!-- Open app -->
+    <TextView
+        android:id="@+id/action_open"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:text="@string/open_app"
+        android:textSize="16sp"
+        android:textColor="@color/aura_text"
+        android:background="?android:attr/selectableItemBackground" />
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/aura_divider"
+        android:layout_marginVertical="8dp" />
+
+    <!-- Placeholder for future actions -->
+    <TextView
+        android:id="@+id/action_placeholder"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:text="@string/more_actions_soon"
+        android:textSize="14sp"
+        android:textColor="@color/aura_text_hint" />
+
+</LinearLayout>
