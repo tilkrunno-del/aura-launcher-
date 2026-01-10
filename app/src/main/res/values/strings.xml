@@ -3,11 +3,9 @@
 
     <string name="app_name">AURA Launcher</string>
 
-    <!-- Apps -->
     <string name="search_apps">Otsi rakendust</string>
     <string name="clear_search">Tühjenda</string>
 
-    <!-- Bottom sheet actions -->
     <string name="aura_open">Ava</string>
     <string name="aura_app_info">Äpi info</string>
     <string name="aura_hide_app">Peida</string>
@@ -16,31 +14,5 @@
     <string name="aura_remove_favorite">Eemalda lemmikutest</string>
     <string name="aura_uninstall">Eemalda</string>
     <string name="aura_done">Valmis</string>
-<!-- ================= AURA BOTTOM SHEET ================= -->
-    <style name="ThemeOverlay_Aura_BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
-        <item name="bottomSheetStyle">@style/AuraBottomSheet</item>
-    </style>
 
-    <style name="AuraBottomSheet" parent="Widget.Material3.BottomSheet.Modal">
-        <item name="android:background">@drawable/bg_aura_sheet</item>
-    </style>
-
-    <!-- Buttons (kui layout viitab) -->
-    <style name="AuraButton" parent="Widget.Material3.Button">
-        <item name="cornerRadius">16dp</item>
-        <item name="android:insetLeft">0dp</item>
-        <item name="android:insetRight">0dp</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-    </style>
-
-    <style name="AuraButton_Secondary" parent="AuraButton">
-        <item name="backgroundTint">@color/aura_sheet</item>
-        <item name="android:textColor">@color/aura_text</item>
-    </style>
-
-    <style name="AuraButton_Danger" parent="AuraButton">
-        <item name="backgroundTint">@color/aura_danger</item>
-        <item name="android:textColor">@color/aura_on_danger</item>
-    </style>
 </resources>
