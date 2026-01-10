@@ -2,66 +2,56 @@ package com.aura.launcher
 
 import android.content.Intent
 import android.os.Bundle
-import android.provider.Settings
 import android.widget.Button
-import android.widget.Toast
+import android.widget.Switch
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var btnOpenApps: Button
-    private lateinit var btnSetDefaultLauncher: Button
-
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemePrefs.applySavedTheme(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Nupud (proovib mitu varianti ID-d, et ei crashiks kui nimi erineb)
-        btnOpenApps = findRequiredButton(
-            "btnOpenApps",
-            "btnApps",
-            "openAppsButton",
-            "buttonOpenApps"
-        )
+        val btnApps: Button = findViewById(R.id.btnApps)
+        val btnHidden: Button = findViewById(R.id.btnHiddenApps)
 
-        btnSetDefaultLauncher = findRequiredButton(
-            "btnSetDefaultLauncher",
-            "btnSetLauncher",
-            "setDefaultLauncherButton",
-            "buttonSetDefaultLauncher"
-        )
+        val swFollowSystem: Switch = findViewById(R.id.swFollowSystem)
+        val swDark: Switch = findViewById(R.id.swDark)
 
-        btnOpenApps.setOnClickListener {
+        btnApps.setOnClickListener {
             startActivity(Intent(this, AppsActivity::class.java))
         }
 
-        btnSetDefaultLauncher.setOnClickListener {
-            openDefaultAppsSettings()
+        btnHidden.setOnClickListener {
+            startActivity(Intent(this, HiddenAppsActivity::class.java))
         }
-    }
 
-    private fun openDefaultAppsSettings() {
-        try {
-            // Kõige tavalisem koht "Default apps / Home app"
-            startActivity(Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))
-        } catch (_: Throwable) {
-            try {
-                // Alternatiivne
-                startActivity(Intent(Settings.ACTION_SETTINGS))
-            } catch (e: Throwable) {
-                Toast.makeText(this, "Ei saa seadeid avada: ${e.message}", Toast.LENGTH_SHORT).show()
+        // Theme UI (lihtne)
+        val mode = ThemePrefs.getThemeMode(this)
+        swFollowSystem.isChecked = mode == ThemePrefs.MODE_FOLLOW_SYSTEM
+        swDark.isChecked = mode == ThemePrefs.MODE_DARK
+
+        swFollowSystem.setOnCheckedChangeListener { _, checked ->
+            if (checked) {
+                swDark.isChecked = false
+                ThemePrefs.setThemeMode(this, ThemePrefs.MODE_FOLLOW_SYSTEM)
+                recreate()
+            } else if (!swDark.isChecked) {
+                ThemePrefs.setThemeMode(this, ThemePrefs.MODE_LIGHT)
+                recreate()
             }
         }
-    }
 
-    private fun findRequiredButton(vararg idNames: String): Button {
-        for (name in idNames) {
-            val id = resources.getIdentifier(name, "id", packageName)
-            if (id != 0) {
-                val v = findViewById<Button>(id)
-                if (v != null) return v
+        swDark.setOnCheckedChangeListener { _, checked ->
+            if (checked) {
+                swFollowSystem.isChecked = false
+                ThemePrefs.setThemeMode(this, ThemePrefs.MODE_DARK)
+                recreate()
+            } else if (!swFollowSystem.isChecked) {
+                ThemePrefs.setThemeMode(this, ThemePrefs.MODE_LIGHT)
+                recreate()
             }
         }
-        error("Missing required Button. Tried ids: ${idNames.joinToString()}")
     }
 }
