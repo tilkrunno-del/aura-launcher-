@@ -5,34 +5,54 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/aura_bg"
-    android:padding="12dp">
+    android:padding="16dp">
 
-    <!-- Search field -->
-    <EditText
-        android:id="@+id/searchEditText"
+    <!-- Search bar card -->
+    <LinearLayout
+        android:id="@+id/searchCard"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:hint="@string/search_apps"
-        android:inputType="text"
-        android:background="@android:drawable/edit_text"
-        android:textColor="@color/aura_text"
-        android:textSize="16sp"
-        android:padding="12dp" />
+        android:layout_height="52dp"
+        android:orientation="horizontal"
+        android:background="@drawable/bg_aura_search"
+        android:paddingStart="14dp"
+        android:paddingEnd="10dp"
+        android:gravity="center_vertical">
 
-    <!-- Clear search -->
-    <Button
-        android:id="@+id/btnClearSearch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/clear_search"
-        android:layout_marginTop="8dp" />
+        <EditText
+            android:id="@+id/searchEditText"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:hint="@string/search_apps"
+            android:inputType="text"
+            android:background="@android:color/transparent"
+            android:textColor="@color/aura_text"
+            android:textColorHint="@color/aura_text_hint"
+            android:textSize="18sp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:singleLine="true"
+            android:imeOptions="actionSearch" />
+
+        <ImageButton
+            android:id="@+id/btnClearSearch"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@android:color/transparent"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:tint="@color/aura_accent"
+            android:contentDescription="@string/clear_search"
+            android:visibility="gone" />
+    </LinearLayout>
 
     <!-- Apps grid -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/appsRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="12dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:layout_marginTop="14dp"
+        android:overScrollMode="never"
+        android:scrollbars="vertical" />
 
 </LinearLayout>
