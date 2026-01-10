@@ -1,16 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- ================= APP ================= -->
     <string name="app_name">AURA Launcher</string>
 
-    <!-- Search -->
-    <string name="search_apps">Otsi rakendust</string>
-    <string name="clear_search">Tühjenda</string>
+    <!-- ================= GENERAL ================= -->
+    <string name="ok">OK</string>
+    <string name="cancel">Tühista</string>
+    <string name="close">Sulge</string>
 
-    <!-- App actions -->
+    <!-- ================= SEARCH ================= -->
+    <string name="search_apps">Otsi rakendust</string>
+    <string name="clear_search">Tühjenda otsing</string>
+
+    <!-- ================= APPS ================= -->
+    <string name="open_apps">Ava rakendused</string>
+    <string name="no_apps_found">Rakendusi ei leitud</string>
+
+    <!-- ================= APP ACTIONS (BOTTOM SHEET) ================= -->
     <string name="aura_open">Ava</string>
     <string name="aura_app_info">Rakenduse info</string>
+    <string name="aura_add_favorite">Lisa lemmikutesse</string>
+    <string name="aura_remove_favorite">Eemalda lemmikutest</string>
     <string name="aura_hide_app">Peida rakendus</string>
-    <string name="aura_uninstall">Eemalda</string>
+    <string name="aura_unhide_app">Näita rakendust</string>
+    <string name="aura_uninstall">Eemalda rakendus</string>
+
+    <!-- ================= SETTINGS ================= -->
+    <string name="settings">Seaded</string>
+    <string name="theme">Teema</string>
+    <string name="theme_system">Kasuta süsteemi teemat</string>
+    <string name="theme_light">Hele režiim</string>
+    <string name="theme_dark">Tume režiim</string>
+
+    <!-- ================= ERRORS ================= -->
+    <string name="error_generic">Midagi läks valesti</string>
+    <string name="error_app_launch">Rakendust ei saa avada</string>
 
 </resources>
