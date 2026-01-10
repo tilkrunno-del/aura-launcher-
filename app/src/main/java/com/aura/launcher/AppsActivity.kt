@@ -1,8 +1,6 @@
 package com.aura.launcher
 
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -20,8 +18,8 @@ class AppsActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: AppsAdapter
 
-    private var searchEditText: EditText? = null
-    private var clearButton: ImageButton? = null
+    private lateinit var searchEditText: EditText
+    private lateinit var clearButton: ImageButton
 
     private var allApps: List<AppInfo> = emptyList()
 
@@ -35,31 +33,30 @@ class AppsActivity : AppCompatActivity() {
 
         recyclerView.layoutManager = GridLayoutManager(this, 4)
 
-        adapter = AppsAdapter(emptyList()) { app ->
-            launchApp(app)
-        }
+        adapter = AppsAdapter(
+            apps = emptyList(),
+            onClick = { app -> launchApp(app) }
+        )
+
         recyclerView.adapter = adapter
 
         allApps = loadInstalledApps()
-        adapter.updateApps(allApps)
+        adapter.submitList(allApps)
 
-        searchEditText?.addTextChangedListener(object : TextWatcher {
+        searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
             override fun afterTextChanged(s: Editable?) {
-                val q = s?.toString()?.lowercase(Locale.getDefault()) ?: ""
-                val filtered = allApps.filter {
-                    it.label.lowercase(Locale.getDefault()).contains(q) ||
-                    it.packageName.lowercase(Locale.getDefault()).contains(q)
-                }
-                adapter.updateApps(filtered)
-                clearButton?.visibility = if (q.isEmpty()) View.GONE else View.VISIBLE
+                val query = s?.toString().orEmpty()
+                adapter.filterApps(query)
+                clearButton.visibility =
+                    if (query.isBlank()) View.GONE else View.VISIBLE
             }
         })
 
-        clearButton?.setOnClickListener {
-            searchEditText?.setText("")
+        clearButton.setOnClickListener {
+            searchEditText.setText("")
         }
     }
 
