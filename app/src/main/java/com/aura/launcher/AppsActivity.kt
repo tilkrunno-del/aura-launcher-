@@ -3,12 +3,15 @@ package com.aura.launcher
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageButton
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -19,7 +22,7 @@ class AppsActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchEditText: EditText
-    private lateinit var clearButton: View
+    private lateinit var clearButton: Button
 
     private lateinit var adapter: AppsAdapter
     private var allApps: List<AppInfo> = emptyList()
@@ -28,35 +31,35 @@ class AppsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_apps)
 
-        // layout id-d on sinu activity_apps.xml-is:
-        // searchEditText, btnClearSearch, appsRecyclerView
+        // --- Views ---
         recyclerView = findViewById(R.id.appsRecyclerView)
         searchEditText = findViewById(R.id.searchEditText)
         clearButton = findViewById(R.id.btnClearSearch)
 
+        // --- RecyclerView ---
         recyclerView.layoutManager = GridLayoutManager(this, 4)
 
         adapter = AppsAdapter(
             apps = emptyList(),
             onClick = { app -> launchApp(app) },
-            onLongPress = { _, app -> showAppInfo(app) }
+            onLongPress = { view, app -> showAppMenu(view, app) }
         )
+
         recyclerView.adapter = adapter
 
+        // --- Load apps ---
         allApps = loadInstalledApps()
         adapter.submitList(allApps)
 
-        // alguses peida "Clear"
-        clearButton.visibility = View.GONE
-
-        // OTSING: filtreeri adapteris (label + packageName)
+        // --- Search ---
         searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
             override fun afterTextChanged(s: Editable?) {
-                val q = s?.toString().orEmpty()
-                adapter.filterApps(q)
-                clearButton.visibility = if (q.isBlank()) View.GONE else View.VISIBLE
+                val query = s?.toString().orEmpty()
+                adapter.filterApps(query)
+                clearButton.visibility = if (query.isBlank()) View.GONE else View.VISIBLE
             }
         })
 
@@ -65,54 +68,85 @@ class AppsActivity : AppCompatActivity() {
         }
     }
 
+    // --------------------------------------------------------------------
+
     private fun launchApp(app: AppInfo) {
-        val pkg = app.packageName
-        val intent = packageManager.getLaunchIntentForPackage(pkg)
+        val intent = packageManager.getLaunchIntentForPackage(app.packageName)
         if (intent == null) {
-            Toast.makeText(this, "Cannot launch: $pkg", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Cannot launch app", Toast.LENGTH_SHORT).show()
             return
         }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
     }
 
-    private fun showAppInfo(app: AppInfo) {
-        val msg = "${app.label}\n${app.packageName}\n${app.className}"
-        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+    private fun showAppMenu(anchor: View, app: AppInfo) {
+        val popup = PopupMenu(this, anchor)
+        popup.menu.add("App info")
+        popup.menu.add("Uninstall")
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.title.toString()) {
+                "App info" -> {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.parse("package:${app.packageName}")
+                    }
+                    startActivity(intent)
+                    true
+                }
+
+                "Uninstall" -> {
+                    val intent = Intent(Intent.ACTION_DELETE).apply {
+                        data = Uri.parse("package:${app.packageName}")
+                    }
+                    startActivity(intent)
+                    true
+                }
+
+                else -> false
+            }
+        }
+        popup.show()
     }
+
+    // --------------------------------------------------------------------
 
     private fun loadInstalledApps(): List<AppInfo> {
         val pm = packageManager
-        val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
+
+        val intent = Intent(Intent.ACTION_MAIN, null).apply {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }
 
-        val resolved = pm.queryIntentActivities(mainIntent, 0)
-        val list = ArrayList<AppInfo>(resolved.size)
+        val resolveInfos = pm.queryIntentActivities(intent, 0)
+        val apps = mutableListOf<AppInfo>()
 
-        for (ri in resolved) {
-            val pkg = ri.activityInfo.packageName ?: continue
-            val cls = ri.activityInfo.name ?: ""
-            val label = ri.loadLabel(pm)?.toString() ?: pkg
-            val icon = tryLoadIcon(ri, pm)
+        for (ri in resolveInfos) {
+            val packageName = ri.activityInfo.packageName
+            val className = ri.activityInfo.name ?: ""
+            val label = ri.loadLabel(pm)?.toString() ?: packageName
+            val icon = loadIconSafe(ri, pm)
 
-            list.add(
+            apps.add(
                 AppInfo(
-                    packageName = pkg,
-                    className = cls,
+                    packageName = packageName,
+                    className = className,
                     label = label,
                     icon = icon
                 )
             )
         }
 
-        return list.sortedBy { it.label.lowercase(Locale.getDefault()) }
+        return apps.sortedBy { it.label.lowercase(Locale.getDefault()) }
     }
 
-    private fun tryLoadIcon(ri: android.content.pm.ResolveInfo, pm: PackageManager): Drawable? {
+    private fun loadIconSafe(
+        ri: android.content.pm.ResolveInfo,
+        pm: PackageManager
+    ): Drawable? {
         return try {
             ri.loadIcon(pm)
-        } catch (_: Throwable) {
+        } catch (e: Exception) {
             getDrawable(android.R.drawable.sym_def_app_icon)
         }
     }
