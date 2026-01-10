@@ -1,64 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@color/aura_bg"
     android:padding="16dp">
 
-    <!-- Otsinguriba -->
-    <EditText
-        android:id="@+id/searchInput"
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Otsi rakendust"
-        android:inputType="text"
-        android:imeOptions="actionSearch"
-        android:drawableEnd="@android:drawable/ic_menu_search"
-        android:padding="12dp" />
-
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="12dp" />
+        android:text="@string/app_name"
+        android:textColor="@color/aura_text"
+        android:textSize="24sp"
+        android:textStyle="bold"/>
 
     <Button
-        android:id="@+id/btnOpenApps"
+        android:id="@+id/btnApps"
+        style="@style/AuraButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ava rakendused" />
-
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="12dp" />
+        android:layout_marginTop="16dp"
+        android:text="@string/open_apps" />
 
     <Button
-        android:id="@+id/btnSetDefaultLauncher"
+        android:id="@+id/btnHiddenApps"
+        style="@style/AuraButton_Secondary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Määra AURA vaikimisi avakuvarakenduseks" />
+        android:layout_marginTop="10dp"
+        android:text="@string/hidden_apps" />
 
-    <Space
+    <View
         android:layout_width="match_parent"
-        android:layout_height="18dp" />
+        android:layout_height="1dp"
+        android:layout_marginTop="18dp"
+        android:background="@color/aura_divider"/>
 
-    <!-- FOLLOW SYSTEM -->
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/switchFollowSystem"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Kasuta süsteemi teemat (auto)"
-        android:padding="6dp" />
-
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="6dp" />
-
-    <!-- DARK MODE (aktiivne ainult siis, kui follow-system on OFF) -->
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/switchDarkMode"
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Tume režiim"
-        android:padding="6dp" />
+        android:layout_marginTop="16dp"
+        android:text="@string/theme"
+        android:textColor="@color/aura_text"
+        android:textStyle="bold"/>
+
+    <Switch
+        android:id="@+id/swFollowSystem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/theme_follow_system"
+        android:textColor="@color/aura_text"
+        android:layout_marginTop="8dp"/>
+
+    <Switch
+        android:id="@+id/swDark"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/theme_dark"
+        android:textColor="@color/aura_text"
+        android:layout_marginTop="6dp"/>
 
 </LinearLayout>
