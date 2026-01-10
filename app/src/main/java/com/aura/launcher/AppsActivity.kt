@@ -8,10 +8,12 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Locale
 
 class AppsActivity : AppCompatActivity() {
 
@@ -26,12 +28,11 @@ class AppsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_apps)
 
-        // XML id-d sinu activity_apps.xml järgi
+        // layout id-d on sinu activity_apps.xml-is:
+        // searchEditText, btnClearSearch, appsRecyclerView
         recyclerView = findViewById(R.id.appsRecyclerView)
         searchEditText = findViewById(R.id.searchEditText)
         clearButton = findViewById(R.id.btnClearSearch)
-
-        clearButton.visibility = View.GONE
 
         recyclerView.layoutManager = GridLayoutManager(this, 4)
 
@@ -42,11 +43,13 @@ class AppsActivity : AppCompatActivity() {
         )
         recyclerView.adapter = adapter
 
-        // Lae appid
         allApps = loadInstalledApps()
         adapter.submitList(allApps)
 
-        // Otsing: kasuta adapteri filterApps() (see sul olemas)
+        // alguses peida "Clear"
+        clearButton.visibility = View.GONE
+
+        // OTSING: filtreeri adapteris (label + packageName)
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
@@ -62,28 +65,24 @@ class AppsActivity : AppCompatActivity() {
         }
     }
 
-    private fun showAppInfo(app: AppInfo) {
-        val msg = buildString {
-            appendLine(app.label)
-            appendLine(app.packageName)
-            append(app.className)
-        }
-        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
-    }
-
     private fun launchApp(app: AppInfo) {
-        val intent = packageManager.getLaunchIntentForPackage(app.packageName)
+        val pkg = app.packageName
+        val intent = packageManager.getLaunchIntentForPackage(pkg)
         if (intent == null) {
-            Toast.makeText(this, "Cannot launch: ${app.packageName}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Cannot launch: $pkg", Toast.LENGTH_SHORT).show()
             return
         }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
     }
 
+    private fun showAppInfo(app: AppInfo) {
+        val msg = "${app.label}\n${app.packageName}\n${app.className}"
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+    }
+
     private fun loadInstalledApps(): List<AppInfo> {
         val pm = packageManager
-
         val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }
@@ -94,7 +93,7 @@ class AppsActivity : AppCompatActivity() {
         for (ri in resolved) {
             val pkg = ri.activityInfo.packageName ?: continue
             val cls = ri.activityInfo.name ?: ""
-            val label = ri.loadLabel(pm)?.toString()?.trim().takeUnless { it.isNullOrBlank() } ?: pkg
+            val label = ri.loadLabel(pm)?.toString() ?: pkg
             val icon = tryLoadIcon(ri, pm)
 
             list.add(
@@ -107,14 +106,14 @@ class AppsActivity : AppCompatActivity() {
             )
         }
 
-        return list.sortedBy { it.label.lowercase() }
+        return list.sortedBy { it.label.lowercase(Locale.getDefault()) }
     }
 
     private fun tryLoadIcon(ri: android.content.pm.ResolveInfo, pm: PackageManager): Drawable? {
         return try {
             ri.loadIcon(pm)
         } catch (_: Throwable) {
-            null
+            getDrawable(android.R.drawable.sym_def_app_icon)
         }
     }
 }
