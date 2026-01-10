@@ -1,14 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <color name="aura_bg">#FFFFFF</color>
-    <color name="aura_card">#F3F3F3</color>
+    <!-- ========== AURA BASE ========== -->
+    <color name="aura_bg">#FFFFFF</color>          <!-- Põhitaust -->
+    <color name="aura_surface">#F4F1FF</color>     <!-- Kaardid / otsinguriba -->
+    <color name="aura_stroke">#DED6FF</color>      <!-- Õrn piirjoon -->
 
-    <color name="aura_text">#000000</color>
-    <color name="aura_hint">#777777</color>
+    <!-- ========== TEXT ========== -->
+    <color name="aura_text">#1E1B2E</color>        <!-- Põhitekst -->
+    <color name="aura_text_secondary">#5E587A</color>
+    <color name="aura_text_hint">#8E86B5</color>   <!-- Hint / placeholder -->
 
-    <color name="aura_stroke">#DDDDDD</color>
-    <color name="aura_badge">#6A5ACD</color>
-    <color name="aura_accent">#6A5ACD</color>
+    <!-- ========== ACCENT ========== -->
+    <color name="aura_accent">#7B61FF</color>      <!-- AURA lilla -->
+    <color name="aura_accent_soft">#CFC6FF</color>
+
+    <!-- ========== ICONS ========== -->
+    <color name="aura_icon">#3A3654</color>
+    <color name="aura_icon_inactive">#A9A3C6</color>
+
+    <!-- ========== STATES ========== -->
+    <color name="aura_disabled">#E6E3F5</color>
+    <color name="aura_divider">#EDEAFB</color>
+
+    <!-- ========== SYSTEM (compat) ========== -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
 
 </resources>
