@@ -1,9 +1,21 @@
-<color name="aura_sheet">#F2F2F7</color>
-<color name="aura_surface">#FFFFFF</color>
-<color name="aura_text_hint">#7A7A85</color>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
 
-<color name="aura_primary">#7C4DFF</color>
-<color name="aura_on_primary">#FFFFFF</color>
+    <!-- Backgrounds -->
+    <color name="aura_bg">#F5F5F7</color>
+    <color name="aura_surface">#FFFFFF</color>
+    <color name="aura_sheet">#F2F2F7</color>
 
-<color name="aura_danger">#D32F2F</color>
-<color name="aura_on_danger">#FFFFFF</color>
+    <!-- Text -->
+    <color name="aura_text">#1C1C1E</color>
+    <color name="aura_text_hint">#7A7A85</color>
+
+    <!-- Primary -->
+    <color name="aura_primary">#7C4DFF</color>
+    <color name="aura_on_primary">#FFFFFF</color>
+
+    <!-- Danger -->
+    <color name="aura_danger">#D32F2F</color>
+    <color name="aura_on_danger">#FFFFFF</color>
+
+</resources>
