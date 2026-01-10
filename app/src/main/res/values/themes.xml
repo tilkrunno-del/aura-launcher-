@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Base application theme -->
-    <style name="Theme.AuraLauncher" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Aura" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/aura_primary</item>
+        <item name="colorPrimaryVariant">@color/aura_accent_dark</item>
         <item name="colorOnPrimary">@color/aura_on_primary</item>
 
+        <item name="colorSurface">@color/aura_surface</item>
         <item name="android:windowBackground">@color/aura_bg</item>
+
         <item name="android:textColorPrimary">@color/aura_text</item>
+        <item name="android:textColorSecondary">@color/aura_text_hint</item>
+
+        <item name="android:statusBarColor" tools:targetApi="l">@color/aura_bg</item>
     </style>
 
 </resources>
