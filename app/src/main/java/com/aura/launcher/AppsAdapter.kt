@@ -22,7 +22,9 @@ class AppsAdapter(
     inner class AppViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val icon: ImageView = view.findViewById(R.id.appIcon)
         val name: TextView = view.findViewById(R.id.appName)
-        val badge: View = view.findViewById(R.id.appBadge) // <-- olemas layoutis
+
+        // Kui item_app.xml-s seda pole, siis jääb null (aga compile OK).
+        val appBadge: ImageView? = view.findViewById(R.id.appBadge)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
@@ -37,17 +39,16 @@ class AppsAdapter(
         holder.icon.setImageDrawable(app.icon)
         holder.name.text = app.label
 
+        // Favorite badge kui olemas
+        holder.appBadge?.visibility = if (isFavorite(app)) View.VISIBLE else View.GONE
+
         holder.itemView.setOnClickListener { onClick(app) }
         holder.itemView.setOnLongClickListener {
             onLongPress(it, app)
             true
         }
 
-        // hidden alpha
-        holder.itemView.alpha = if (isHidden(app)) 0.45f else 1f
-
-        // badge = favorite (näita väike täpp)
-        holder.badge.visibility = if (isFavorite(app)) View.VISIBLE else View.GONE
+        holder.itemView.alpha = if (isHidden(app)) 0.4f else 1f
     }
 
     override fun getItemCount(): Int = visibleApps.size
@@ -58,7 +59,9 @@ class AppsAdapter(
             visibleApps.addAll(allApps)
         } else {
             val q = query.lowercase(Locale.getDefault())
-            visibleApps.addAll(allApps.filter { it.label.lowercase(Locale.getDefault()).contains(q) })
+            visibleApps.addAll(
+                allApps.filter { it.label.lowercase(Locale.getDefault()).contains(q) }
+            )
         }
         notifyDataSetChanged()
     }
@@ -71,5 +74,5 @@ class AppsAdapter(
         notifyDataSetChanged()
     }
 
-    fun getVisibleList(): List<AppInfo> = visibleApps.toList()
+    fun currentVisible(): List<AppInfo> = visibleApps.toList()
 }
