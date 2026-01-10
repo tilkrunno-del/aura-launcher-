@@ -1,24 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Backgrounds -->
     <color name="aura_bg">#FFFFFF</color>
-    <color name="aura_surface">#F4F1FF</color>
-    <color name="aura_stroke">#DED6FF</color>
+    <color name="aura_sheet">#F4F5FA</color>
+    <color name="aura_card">#EEF2FF</color>
 
-    <color name="aura_text">#1E1B2E</color>
-    <color name="aura_text_secondary">#5E587A</color>
-    <color name="aura_text_hint">#8E86B5</color>
+    <!-- Text -->
+    <color name="aura_text">#111827</color>
+    <color name="aura_text_hint">#6B7280</color>
 
-    <color name="aura_accent">#7B61FF</color>
-    <color name="aura_accent_soft">#CFC6FF</color>
+    <!-- Accent -->
+    <color name="aura_accent">#A78BFA</color>
+    <color name="aura_accent_dark">#7C3AED</color>
 
-    <color name="aura_icon">#3A3654</color>
-    <color name="aura_icon_inactive">#A9A3C6</color>
-
-    <color name="aura_disabled">#E6E3F5</color>
-    <color name="aura_divider">#EDEAFB</color>
-
-    <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>
+    <!-- Danger -->
+    <color name="aura_danger">#EF4444</color>
 
 </resources>
