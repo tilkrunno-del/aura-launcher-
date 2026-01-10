@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- AURA Buttons -->
+    <style name="AuraButton">
+        <item name="android:background">@color/aura_accent</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+    </style>
+
+    <style name="AuraButton_Secondary">
+        <item name="android:background">@color/aura_card</item>
+        <item name="android:textColor">@color/aura_accent_dark</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+    </style>
+
+    <style name="AuraButton_Danger">
+        <item name="android:background">@color/aura_danger</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+    </style>
+
+</resources>
