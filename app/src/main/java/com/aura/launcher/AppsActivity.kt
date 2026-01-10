@@ -1,10 +1,9 @@
 package com.aura.launcher
 
 import android.content.Intent
-import android.content.pm.ResolveInfo
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
@@ -14,115 +13,106 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-class AppsActivity : AppCompatActivity(), AppActionsBottomSheet.Callback {
+class AppsActivity : AppCompatActivity() {
 
-    private lateinit var recycler: RecyclerView
-    private lateinit var search: EditText
-    private lateinit var clearBtn: Button
+    private lateinit var searchEditText: EditText
+    private lateinit var btnClear: Button
+    private lateinit var appsRecyclerView: RecyclerView
 
-    private var allApps: List<AppInfo> = emptyList()
     private lateinit var adapter: AppsAdapter
+    private val allApps = mutableListOf<AppInfo>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        ThemePrefs.applySavedTheme(this)
         super.onCreate(savedInstanceState)
+        LauncherUtils.applyThemeMode(this)
         setContentView(R.layout.activity_apps)
 
-        recycler = findViewById(R.id.appsRecyclerView)
-        search = findViewById(R.id.searchEditText)
-        clearBtn = findViewById(R.id.btnClearSearch)
+        searchEditText = findViewById(R.id.searchEditText)
+        btnClear = findViewById(R.id.btnClearSearch)
+        appsRecyclerView = findViewById(R.id.appsRecyclerView)
 
-        recycler.layoutManager = GridLayoutManager(this, 4)
-
-        allApps = loadLaunchableApps(includeHidden = false)
+        appsRecyclerView.layoutManager = GridLayoutManager(this, 4)
 
         adapter = AppsAdapter(
-            apps = allApps,
-            onClick = { app ->
-                LauncherUtils.launchApp(this, app.packageName, app.className)
-            },
-            onLongPress = { _, app ->
-                AppActionsBottomSheet.newInstance(app).show(supportFragmentManager, "app_actions")
-            },
-            isFavorite = { AppStateStore.isFavorite(this, it.packageName) },
-            isHidden = { AppStateStore.isHidden(this, it.packageName) }
+            apps = emptyList(),
+            onClick = { openApp(it) },
+            onLongPress = { anchor, app -> showActions(anchor, app) },
+            isFavorite = { LauncherUtils.isFavorite(this, it.packageName) },
+            isHidden = { LauncherUtils.isHidden(this, it.packageName) }
         )
+        appsRecyclerView.adapter = adapter
 
-        recycler.adapter = adapter
+        loadApps()
 
-        search.addTextChangedListener(object : TextWatcher {
+        btnClear.setOnClickListener {
+            searchEditText.setText("")
+            adapter.filterApps("")
+        }
+
+        searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 adapter.filterApps(s?.toString().orEmpty())
             }
             override fun afterTextChanged(s: Editable?) {}
         })
-
-        clearBtn.setOnClickListener {
-            search.setText("")
-            adapter.filterApps("")
-        }
     }
 
-    private fun loadLaunchableApps(includeHidden: Boolean): List<AppInfo> {
+    private fun loadApps() {
+        allApps.clear()
+
         val pm = packageManager
-        val intent = Intent(Intent.ACTION_MAIN, null).addCategory(Intent.CATEGORY_LAUNCHER)
-        val resolved: List<ResolveInfo> = pm.queryIntentActivities(intent, 0)
+        val intent = Intent(Intent.ACTION_MAIN, null).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
+        }
 
-        val hiddenSet = AppStateStore.getHidden(this)
+        val hidden = LauncherUtils.getHiddenApps(this)
 
-        val list = resolved.mapNotNull { ri ->
-            val ai = ri.activityInfo ?: return@mapNotNull null
-            val pkg = ai.packageName
-            val cls = ai.name
-            if (!includeHidden && hiddenSet.contains(pkg)) return@mapNotNull null
-
-            val label = ri.loadLabel(pm)?.toString() ?: pkg
+        val resolveInfos = pm.queryIntentActivities(intent, PackageManager.MATCH_ALL)
+        val apps = resolveInfos.map { ri ->
+            val label = ri.loadLabel(pm)?.toString() ?: ri.activityInfo.name
             val icon = ri.loadIcon(pm)
-
             AppInfo(
-                packageName = pkg,
-                className = cls,
+                packageName = ri.activityInfo.packageName,
+                className = ri.activityInfo.name,
                 label = label,
                 icon = icon
             )
-        }.sortedBy { it.label.lowercase() }
+        }
+            .filter { !hidden.contains(it.packageName) } // peidetud ei kuvata siia
+            .sortedBy { it.label.lowercase() }
 
-        return list
-    }
-
-    private fun refreshList() {
-        allApps = loadLaunchableApps(includeHidden = false)
+        allApps.addAll(apps)
         adapter.submitList(allApps)
-        adapter.filterApps(search.text?.toString().orEmpty())
     }
 
-    // BottomSheet callback
-    override fun onOpen(app: AppInfo) {
-        LauncherUtils.launchApp(this, app.packageName, app.className)
-    }
-
-    override fun onAppInfo(app: AppInfo) {
-        val i = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            data = Uri.parse("package:${app.packageName}")
+    private fun openApp(app: AppInfo) {
+        val launchIntent = Intent().apply {
+            setClassName(app.packageName, app.className)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        startActivity(i)
+        runCatching { startActivity(launchIntent) }
     }
 
-    override fun onToggleFavorite(app: AppInfo, makeFavorite: Boolean) {
-        AppStateStore.setFavorite(this, app.packageName, makeFavorite)
-        refreshList()
+    private fun showActions(anchor: View, app: AppInfo) {
+        AppActionsBottomSheet.newInstance(
+            packageName = app.packageName,
+            label = app.label,
+            className = app.className
+        ).apply {
+            onChanged = {
+                // refresh list (favorite/hide/uninstall impacts UI)
+                loadApps()
+            }
+        }.show(supportFragmentManager, "AppActionsBottomSheet")
     }
 
-    override fun onToggleHidden(app: AppInfo, makeHidden: Boolean) {
-        AppStateStore.setHidden(this, app.packageName, makeHidden)
-        refreshList()
-    }
-
-    override fun onUninstall(app: AppInfo) {
-        val i = Intent(Intent.ACTION_DELETE).apply {
-            data = Uri.parse("package:${app.packageName}")
+    companion object {
+        fun openAppInfo(activity: AppCompatActivity, packageName: String) {
+            val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
+            }
+            activity.startActivity(intent)
         }
-        startActivity(i)
     }
 }
