@@ -1,4 +1,5 @@
-package com.aura.llauncher
+package com.aura.launcher
+
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -6,20 +7,20 @@ import android.os.Bundle
 import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.KeyEvent
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class AppsActivity : AppCompatActivity() {
 
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var searchInput: EditText
-    private lateinit var searchIcon: ImageView
-    private lateinit var emptyText: TextView
+    private lateinit var appsRecyclerView: RecyclerView
+    private lateinit var searchEditText: EditText
+    private lateinit var btnClearSearch: ImageButton
 
     private lateinit var adapter: AppsAdapter
 
@@ -30,29 +31,74 @@ class AppsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_apps)
 
-        recyclerView = findViewById(R.id.recyclerApps)
-        searchInput = findViewById(R.id.searchInput)
-        searchIcon = findViewById(R.id.searchIcon)
-        emptyText = findViewById(R.id.emptyText)
+        appsRecyclerView = findViewById(R.id.appsRecyclerView)
+        searchEditText = findViewById(R.id.searchEditText)
+        btnClearSearch = findViewById(R.id.btnClearSearch)
 
-        // Grid columns: kui sul on oma prefs util, saad siia pärast asendada.
+        // Grid columns (hiljem saad siia panna prefs-ist väärtuse)
         val spanCount = 4
-        recyclerView.layoutManager = GridLayoutManager(this, spanCount)
+        appsRecyclerView.layoutManager = GridLayoutManager(this, spanCount)
 
         adapter = AppsAdapter(
             apps = filteredApps,
             onClick = { app -> launchApp(app) },
-            onLongClick = { app -> openAppActions(app); true }
+            onLongClick = { app ->
+                openAppActions(app)
+                true
+            }
         )
-        recyclerView.adapter = adapter
+        appsRecyclerView.adapter = adapter
 
         loadApps()
-        applySearch()
+        setupSearch()
+        setupClearButton()
+    }
 
-        searchIcon.setOnClickListener {
-            // mugav: vajutus paneb kursori otsingusse
-            searchInput.requestFocus()
+    private fun setupClearButton() {
+        btnClearSearch.setOnClickListener {
+            searchEditText.setText("")
         }
+    }
+
+    private fun setupSearch() {
+        // Klaviatuuri "Search" vajutus
+        searchEditText.setOnEditorActionListener { _, actionId, event ->
+            val isSearch =
+                actionId == EditorInfo.IME_ACTION_SEARCH ||
+                    (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
+
+            if (isSearch) {
+                // lihtsalt sulgeb klaviatuuri (kui sul on util, võid siia panna hideKeyboard())
+                searchEditText.clearFocus()
+                true
+            } else {
+                false
+            }
+        }
+
+        searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                val q = s?.toString()?.trim()?.lowercase().orEmpty()
+
+                btnClearSearch.visibility = if (q.isEmpty()) View.GONE else View.VISIBLE
+
+                filteredApps.clear()
+                if (q.isEmpty()) {
+                    filteredApps.addAll(allApps)
+                } else {
+                    filteredApps.addAll(
+                        allApps.filter {
+                            it.label.lowercase().contains(q) || it.packageName.lowercase().contains(q)
+                        }
+                    )
+                }
+
+                adapter.notifyDataSetChanged()
+            }
+        })
     }
 
     private fun loadApps() {
@@ -72,7 +118,7 @@ class AppsActivity : AppCompatActivity() {
             val label = ri.loadLabel(pm)?.toString() ?: pkg
             val icon = ri.loadIcon(pm)
 
-            // OLULINE: AppInfo peab olema (packageName, className, label, icon)
+            // NB! AppInfo peab olema: (packageName, className, label, icon)
             allApps.add(
                 AppInfo(
                     packageName = pkg,
@@ -83,41 +129,9 @@ class AppsActivity : AppCompatActivity() {
             )
         }
 
-        // Esialgne list
         filteredApps.clear()
         filteredApps.addAll(allApps)
         adapter.notifyDataSetChanged()
-
-        updateEmptyState()
-    }
-
-    private fun applySearch() {
-        searchInput.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-
-            override fun afterTextChanged(s: Editable?) {
-                val q = s?.toString()?.trim()?.lowercase().orEmpty()
-
-                filteredApps.clear()
-                if (q.isEmpty()) {
-                    filteredApps.addAll(allApps)
-                } else {
-                    filteredApps.addAll(
-                        allApps.filter { it.label.lowercase().contains(q) || it.packageName.lowercase().contains(q) }
-                    )
-                }
-
-                adapter.notifyDataSetChanged()
-                updateEmptyState()
-            }
-        })
-    }
-
-    private fun updateEmptyState() {
-        val isEmpty = filteredApps.isEmpty()
-        emptyText.visibility = if (isEmpty) View.VISIBLE else View.GONE
-        recyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
     }
 
     private fun launchApp(app: AppInfo) {
@@ -127,9 +141,25 @@ class AppsActivity : AppCompatActivity() {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             startActivity(launchIntent)
-        } catch (e: Exception) {
-            // fallback: package launch intent
+        } catch (_: Exception) {
+            // fallback: package default launcher
             try {
                 val fallback = packageManager.getLaunchIntentForPackage(app.packageName)
-                if (fallback != null) {
-                    startActivity(fallback)
+                if (fallback != null) startActivity(fallback)
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    private fun openAppActions(app: AppInfo) {
+        // Ajutine: avab "App info" (stabiilne ja ei vaja bottomsheeti)
+        openAppInfo(app.packageName)
+    }
+
+    private fun openAppInfo(packageName: String) {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.parse("package:$packageName")
+        }
+        startActivity(intent)
+    }
+}
