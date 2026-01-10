@@ -42,27 +42,46 @@ class AppsAdapter(
             true
         }
 
+        // Kui on peidetud, tee läbipaistvaks
         holder.itemView.alpha = if (isHidden(app)) 0.4f else 1f
+
+        // (Kui hiljem tahad favorite märki / badge'i, siis kasuta isFavorite(app))
+        // val fav = isFavorite(app)
     }
 
     override fun getItemCount(): Int = visibleApps.size
 
+    /**
+     * Otsing: otsib nii nime (label) kui ka packageName järgi.
+     */
     fun filterApps(query: String) {
         visibleApps.clear()
+
         if (query.isBlank()) {
             visibleApps.addAll(allApps)
         } else {
-            val q = query.lowercase(Locale.getDefault())
-            visibleApps.addAll(allApps.filter { it.label.lowercase(Locale.getDefault()).contains(q) })
+            val q = query.lowercase(Locale.getDefault()).trim()
+            visibleApps.addAll(
+                allApps.filter { app ->
+                    app.label.lowercase(Locale.getDefault()).contains(q) ||
+                        app.packageName.lowercase(Locale.getDefault()).contains(q)
+                }
+            )
         }
+
         notifyDataSetChanged()
     }
 
+    /**
+     * Uus list (näiteks kui AppsActivity laeb äpid uuesti).
+     */
     fun submitList(newList: List<AppInfo>) {
         allApps.clear()
         allApps.addAll(newList)
+
         visibleApps.clear()
         visibleApps.addAll(newList)
+
         notifyDataSetChanged()
     }
 }
