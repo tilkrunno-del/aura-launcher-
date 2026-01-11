@@ -8,13 +8,14 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class AppsAdapter(
-    private var apps: List<AppInfo>,
+    private val items: MutableList<AppInfo>,
     private val onClick: (AppInfo) -> Unit,
-    private val onLongClick: (AppInfo) -> Boolean
+    private val onLongClick: (AppInfo) -> Unit
 ) : RecyclerView.Adapter<AppsAdapter.AppViewHolder>() {
 
-    fun updateList(newApps: List<AppInfo>) {
-        apps = newApps
+    fun submitList(newList: List<AppInfo>) {
+        items.clear()
+        items.addAll(newList)
         notifyDataSetChanged()
     }
 
@@ -25,19 +26,22 @@ class AppsAdapter(
     }
 
     override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
-        val app = apps[position]
+        val app = items[position]
+
         holder.icon.setImageDrawable(app.icon)
         holder.label.text = app.label
 
         holder.itemView.setOnClickListener { onClick(app) }
-        holder.itemView.setOnLongClickListener { onLongClick(app) }
+        holder.itemView.setOnLongClickListener {
+            onLongClick(app)
+            true
+        }
     }
 
-    override fun getItemCount(): Int = apps.size
+    override fun getItemCount(): Int = items.size
 
     class AppViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val icon: ImageView = view.findViewById(R.id.appIcon)
         val label: TextView = view.findViewById(R.id.appLabel)
     }
 }
-
