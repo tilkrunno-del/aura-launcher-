@@ -8,26 +8,24 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class AppsAdapter(
-    apps: List<AppInfo>,
+    private var apps: List<AppInfo>,
     private val onClick: (AppInfo) -> Unit,
     private val onLongClick: (AppInfo) -> Boolean
-) : RecyclerView.Adapter<AppsAdapter.VH>() {
+) : RecyclerView.Adapter<AppsAdapter.AppViewHolder>() {
 
-    private val items = apps.toMutableList()
-
-    fun updateList(newItems: List<AppInfo>) {
-        items.clear()
-        items.addAll(newItems)
+    fun updateList(newApps: List<AppInfo>) {
+        apps = newApps
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_app, parent, false)
-        return VH(v)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_app, parent, false)
+        return AppViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: VH, position: Int) {
-        val app = items[position]
+    override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
+        val app = apps[position]
         holder.icon.setImageDrawable(app.icon)
         holder.label.text = app.label
 
@@ -35,10 +33,10 @@ class AppsAdapter(
         holder.itemView.setOnLongClickListener { onLongClick(app) }
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun getItemCount(): Int = apps.size
 
-    class VH(v: View) : RecyclerView.ViewHolder(v) {
-        val icon: ImageView = v.findViewById(R.id.appIcon)
-        val label: TextView = v.findViewById(R.id.appLabel)
+    class AppViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val icon: ImageView = view.findViewById(R.id.appIcon)
+        val label: TextView = view.findViewById(R.id.appLabel)
     }
 }
