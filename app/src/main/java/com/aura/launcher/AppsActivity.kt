@@ -1,11 +1,13 @@
 package com.aura.launcher
 
+import android.content.Intent
+import android.content.pm.ResolveInfo
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -13,83 +15,100 @@ import androidx.recyclerview.widget.RecyclerView
 class AppsActivity : AppCompatActivity() {
 
     private lateinit var recycler: RecyclerView
-    private lateinit var search: EditText
-    private lateinit var clear: ImageButton
+    private lateinit var searchEditText: EditText
+    private lateinit var btnClear: ImageButton
 
     private lateinit var adapter: AppsAdapter
-    private val allApps = mutableListOf<AppInfo>()
+
+    private val allApps: MutableList<AppInfo> = mutableListOf()
+    private val filteredApps: MutableList<AppInfo> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_apps) // <-- PEAB klappima activity_apps.xml-iga
 
-        // IMPORTANT: peab vastama päris layout failile
-        // Veendu, et sul on: res/layout/activity_apps.xml
-        setContentView(R.layout.activity_apps)
-
-        // Kui ID-d ei klapi, ära crashi — ütle ja lõpeta
-        recycler = findViewById<RecyclerView?>(R.id.appsRecyclerView) ?: run {
-            Toast.makeText(this, "UI error: appsRecyclerView missing", Toast.LENGTH_LONG).show()
-            finish()
-            return
-        }
-
-        search = findViewById<EditText?>(R.id.searchEditText) ?: run {
-            Toast.makeText(this, "UI error: searchEditText missing", Toast.LENGTH_LONG).show()
-            finish()
-            return
-        }
-
-        clear = findViewById<ImageButton?>(R.id.btnClearSearch) ?: run {
-            Toast.makeText(this, "UI error: btnClearSearch missing", Toast.LENGTH_LONG).show()
-            finish()
-            return
-        }
+        recycler = findViewById(R.id.appsRecyclerView)
+        searchEditText = findViewById(R.id.searchEditText)
+        btnClear = findViewById(R.id.btnClearSearch)
 
         recycler.layoutManager = GridLayoutManager(this, 4)
 
         adapter = AppsAdapter(
-            apps = emptyList(),
-            onClick = { app ->
-                LauncherUtils.launchApp(this, app)
-            },
+            items = filteredApps,
+            onClick = { app -> launchApp(app) },
             onLongClick = { app ->
-                // praegu: ei tee midagi (et ei crashiks)
-                // hiljem: ava bottomsheet / peida app
-                true
+                // Kui sul on AppActionsBottomSheet, siis näita seda siin.
+                // Muidu jäta praegu tühjaks (ei crashi).
+                try {
+                    AppActionsBottomSheet(this, app).show()
+                } catch (_: Throwable) { }
             }
         )
         recycler.adapter = adapter
 
-        loadAppsSafely()
+        loadApps()
+        applyFilter("")
 
-        clear.setOnClickListener {
-            search.setText("")
+        btnClear.setOnClickListener {
+            searchEditText.setText("")
         }
 
-        search.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-            override fun afterTextChanged(s: Editable?) {
-                val q = s?.toString()?.trim().orEmpty()
-                clear.visibility = if (q.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE
-
-                val filtered = if (q.isEmpty()) {
-                    allApps
-                } else {
-                    allApps.filter { it.label.contains(q, ignoreCase = true) }
-                }
-                adapter.updateList(filtered)
+        searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val text = s?.toString() ?: ""
+                btnClear.visibility = if (text.isEmpty()) View.GONE else View.VISIBLE
+                applyFilter(text)
             }
+            override fun afterTextChanged(s: Editable?) {}
         })
     }
 
-    private fun loadAppsSafely() {
-        try {
-            allApps.clear()
-            allApps.addAll(LauncherUtils.getInstalledApps(this))
-            adapter.updateList(allApps)
-        } catch (t: Throwable) {
-            Toast.makeText(this, "Load apps failed: ${t.message}", Toast.LENGTH_LONG).show()
+    private fun loadApps() {
+        allApps.clear()
+
+        val pm = packageManager
+        val intent = Intent(Intent.ACTION_MAIN, null).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
+        }
+
+        val resolved: List<ResolveInfo> = pm.queryIntentActivities(intent, 0)
+
+        for (ri in resolved) {
+            val ai = ri.activityInfo ?: continue
+            val label = ri.loadLabel(pm)?.toString() ?: ai.packageName
+            val icon = ri.loadIcon(pm)
+
+            allApps.add(
+                AppInfo(
+                    label = label,
+                    packageName = ai.packageName,
+                    className = ai.name,
+                    icon = icon
+                )
+            )
+        }
+
+        allApps.sortBy { it.label.lowercase() }
+    }
+
+    private fun applyFilter(query: String) {
+        val q = query.trim().lowercase()
+
+        filteredApps.clear()
+        if (q.isEmpty()) {
+            filteredApps.addAll(allApps)
+        } else {
+            filteredApps.addAll(allApps.filter { it.label.lowercase().contains(q) })
+        }
+
+        adapter.submitList(filteredApps.toList())
+    }
+
+    private fun launchApp(app: AppInfo) {
+        val launchIntent = packageManager.getLaunchIntentForPackage(app.packageName)
+        if (launchIntent != null) {
+            startActivity(launchIntent)
         }
     }
 }
