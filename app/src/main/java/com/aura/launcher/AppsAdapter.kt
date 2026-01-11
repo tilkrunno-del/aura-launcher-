@@ -40,4 +40,4 @@ class AppsAdapter(
         val label: TextView = view.findViewById(R.id.appLabel)
     }
 }
- <string name="app_icon">App icon</string>
+
