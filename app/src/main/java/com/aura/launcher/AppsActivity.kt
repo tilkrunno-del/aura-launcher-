@@ -1,113 +1,126 @@
 package com.aura.launcher
 
+import android.content.Intent
+import android.content.pm.ResolveInfo
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
+import android.widget.EditText
+import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.aura.launcher.databinding.ActivityAppsBinding
 
 class AppsActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityAppsBinding
-    private lateinit var adapter: AppsAdapter
+    private lateinit var appsRecyclerView: RecyclerView
+    private lateinit var searchEditText: EditText
+    private lateinit var btnClearSearch: ImageButton
 
-    private val allApps = mutableListOf<AppInfo>()
-    private val filteredApps = mutableListOf<AppInfo>()
+    private val allApps: MutableList<AppInfo> = mutableListOf()
+    private val shownApps: MutableList<AppInfo> = mutableListOf()
+
+    private lateinit var adapter: AppsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.apps_activity) // <- sinu XML nimi oligi apps_activity.xml
 
-        binding = ActivityAppsBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        appsRecyclerView = findViewById(R.id.appsRecyclerView)
+        searchEditText = findViewById(R.id.searchEditText)
+        btnClearSearch = findViewById(R.id.btnClearSearch)
 
-        setupRecycler()
+        appsRecyclerView.layoutManager = GridLayoutManager(this, 4)
+
+        adapter = AppsAdapter(
+            apps = shownApps,
+            onOpen = { app ->
+                launchApp(app)
+            },
+            onLongClick = { app ->
+                // praegu lihtsalt avab ka (et build kindlalt tööle saada)
+                // hiljem saad siia panna AppActionsBottomSheet / menüü
+                launchApp(app)
+            }
+        )
+
+        appsRecyclerView.adapter = adapter
+
         loadApps()
         setupSearch()
     }
 
-    private fun setupRecycler() {
-        adapter = AppsAdapter(
-            apps = filteredApps,
-            onOpen = { app ->
-                LauncherUtils.launchApp(this, app)
-            },
-            onLongClick = { app ->
-                AppActionsBottomSheet(this, app).show()
-            }
-        )
-
-        binding.appsRecyclerView.layoutManager =
-            GridLayoutManager(this, 4, RecyclerView.VERTICAL, false)
-
-        binding.appsRecyclerView.adapter = adapter
-    }
-
     private fun loadApps() {
-        val pm = packageManager
-        val intent = pm.getLaunchIntentForPackage(packageName)
-
-        val launchIntent = android.content.Intent(android.content.Intent.ACTION_MAIN).apply {
-            addCategory(android.content.Intent.CATEGORY_LAUNCHER)
-        }
-
-        val resolveInfos = pm.queryIntentActivities(launchIntent, 0)
-
         allApps.clear()
 
-        for (info in resolveInfos) {
-            val label = info.loadLabel(pm).toString()
-            val packageName = info.activityInfo.packageName
-            val className = info.activityInfo.name
-            val icon = info.loadIcon(pm)
+        val pm = packageManager
+        val intent = Intent(Intent.ACTION_MAIN, null).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
+        }
 
-            allApps.add(
-                AppInfo(
-                    label = label,
-                    packageName = packageName,
-                    className = className,
-                    icon = icon
-                )
+        val resolved: List<ResolveInfo> =
+            pm.queryIntentActivities(intent, 0)
+
+        for (ri in resolved) {
+            val ai = ri.activityInfo ?: continue
+            val label = ri.loadLabel(pm)?.toString() ?: ai.name
+            val icon = ri.loadIcon(pm)
+
+            val app = AppInfo(
+                label = label,
+                packageName = ai.packageName,
+                className = ai.name,
+                icon = icon
             )
+            allApps.add(app)
         }
 
         allApps.sortBy { it.label.lowercase() }
 
-        filteredApps.clear()
-        filteredApps.addAll(allApps)
+        shownApps.clear()
+        shownApps.addAll(allApps)
         adapter.notifyDataSetChanged()
     }
 
     private fun setupSearch() {
-        binding.searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                filterApps(s?.toString().orEmpty())
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
-
-        binding.btnClearSearch.setOnClickListener {
-            binding.searchEditText.text.clear()
+        btnClearSearch.setOnClickListener {
+            searchEditText.setText("")
         }
+
+        searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun afterTextChanged(s: Editable?) = Unit
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val q = s?.toString()?.trim().orEmpty()
+                btnClearSearch.visibility = if (q.isEmpty()) View.GONE else View.VISIBLE
+                filterApps(q)
+            }
+        })
     }
 
     private fun filterApps(query: String) {
-        filteredApps.clear()
+        val q = query.lowercase()
 
-        if (query.isBlank()) {
-            filteredApps.addAll(allApps)
-            binding.btnClearSearch.visibility = android.view.View.GONE
+        shownApps.clear()
+        if (q.isEmpty()) {
+            shownApps.addAll(allApps)
         } else {
-            val q = query.lowercase()
-            filteredApps.addAll(
-                allApps.filter { it.label.lowercase().contains(q) }
-            )
-            binding.btnClearSearch.visibility = android.view.View.VISIBLE
+            shownApps.addAll(allApps.filter { it.label.lowercase().contains(q) })
         }
-
         adapter.notifyDataSetChanged()
+    }
+
+    private fun launchApp(app: AppInfo) {
+        try {
+            val intent = Intent().apply {
+                setClassName(app.packageName, app.className)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+        } catch (_: Throwable) {
+            // ei crashi kui mingi app ei käivitu
+        }
     }
 }
