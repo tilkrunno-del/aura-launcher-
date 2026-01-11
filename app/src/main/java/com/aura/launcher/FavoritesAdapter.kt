@@ -15,7 +15,7 @@ class FavoritesAdapter(
 
     inner class FavVH(view: View) : RecyclerView.ViewHolder(view) {
         val icon: ImageView = view.findViewById(R.id.appIcon)
-        val name: TextView = view.findViewById(R.id.appName)
+        val name: TextView = view.findViewById(R.id.appLabel) // <-- FIX: oli appName
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavVH {
