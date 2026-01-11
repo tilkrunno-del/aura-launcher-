@@ -11,38 +11,29 @@ class AppsAdapter(
     private val apps: List<AppInfo>,
     private val onOpen: (AppInfo) -> Unit,
     private val onLongClick: (AppInfo) -> Unit
-) : RecyclerView.Adapter<AppsAdapter.AppViewHolder>() {
+) : RecyclerView.Adapter<AppsAdapter.VH>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_app, parent, false)
-        return AppViewHolder(view)
+    class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val icon: ImageView = itemView.findViewById(R.id.appIcon)
+        val name: TextView = itemView.findViewById(R.id.appName)
     }
 
-    override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_app, parent, false)
+        return VH(v)
+    }
+
+    override fun onBindViewHolder(holder: VH, position: Int) {
         val app = apps[position]
-        holder.bind(app, onOpen, onLongClick)
+        holder.icon.setImageDrawable(app.icon)
+        holder.name.text = app.label
+
+        holder.itemView.setOnClickListener { onOpen(app) }
+        holder.itemView.setOnLongClickListener {
+            onLongClick(app)
+            true
+        }
     }
 
     override fun getItemCount(): Int = apps.size
-
-    class AppViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val iconView: ImageView = itemView.findViewById(R.id.appIcon)
-        private val labelView: TextView = itemView.findViewById(R.id.appLabel)
-
-        fun bind(
-            app: AppInfo,
-            onOpen: (AppInfo) -> Unit,
-            onLongClick: (AppInfo) -> Unit
-        ) {
-            iconView.setImageDrawable(app.icon)
-            labelView.text = app.label
-
-            itemView.setOnClickListener { onOpen(app) }
-            itemView.setOnLongClickListener {
-                onLongClick(app)
-                true
-            }
-        }
-    }
 }
