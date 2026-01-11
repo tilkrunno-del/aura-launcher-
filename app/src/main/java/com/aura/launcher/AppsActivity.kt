@@ -18,14 +18,14 @@ class AppsActivity : AppCompatActivity() {
     private lateinit var searchEditText: EditText
     private lateinit var btnClearSearch: ImageButton
 
-    private val allApps: MutableList<AppInfo> = mutableListOf()
-    private val shownApps: MutableList<AppInfo> = mutableListOf()
+    private val allApps = mutableListOf<AppInfo>()
+    private val shownApps = mutableListOf<AppInfo>()
 
     private lateinit var adapter: AppsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.apps_activity) // <- sinu XML nimi oligi apps_activity.xml
+        setContentView(R.layout.apps_activity)
 
         appsRecyclerView = findViewById(R.id.appsRecyclerView)
         searchEditText = findViewById(R.id.searchEditText)
@@ -35,16 +35,12 @@ class AppsActivity : AppCompatActivity() {
 
         adapter = AppsAdapter(
             apps = shownApps,
-            onOpen = { app ->
-                launchApp(app)
-            },
+            onOpen = { app -> launchApp(app) },
             onLongClick = { app ->
-                // praegu lihtsalt avab ka (et build kindlalt tööle saada)
-                // hiljem saad siia panna AppActionsBottomSheet / menüü
+                // ajutiselt: long press teeb sama mis click
                 launchApp(app)
             }
         )
-
         appsRecyclerView.adapter = adapter
 
         loadApps()
@@ -59,21 +55,21 @@ class AppsActivity : AppCompatActivity() {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }
 
-        val resolved: List<ResolveInfo> =
-            pm.queryIntentActivities(intent, 0)
+        val resolved: List<ResolveInfo> = pm.queryIntentActivities(intent, 0)
 
         for (ri in resolved) {
             val ai = ri.activityInfo ?: continue
             val label = ri.loadLabel(pm)?.toString() ?: ai.name
             val icon = ri.loadIcon(pm)
 
-            val app = AppInfo(
-                label = label,
-                packageName = ai.packageName,
-                className = ai.name,
-                icon = icon
+            allApps.add(
+                AppInfo(
+                    label = label,
+                    packageName = ai.packageName,
+                    className = ai.name,
+                    icon = icon
+                )
             )
-            allApps.add(app)
         }
 
         allApps.sortBy { it.label.lowercase() }
@@ -84,9 +80,7 @@ class AppsActivity : AppCompatActivity() {
     }
 
     private fun setupSearch() {
-        btnClearSearch.setOnClickListener {
-            searchEditText.setText("")
-        }
+        btnClearSearch.setOnClickListener { searchEditText.setText("") }
 
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
@@ -119,8 +113,6 @@ class AppsActivity : AppCompatActivity() {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             startActivity(intent)
-        } catch (_: Throwable) {
-            // ei crashi kui mingi app ei käivitu
-        }
+        } catch (_: Throwable) { }
     }
 }
