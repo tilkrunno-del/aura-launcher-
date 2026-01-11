@@ -4,15 +4,14 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="12dp"
-    android:gravity="center"
-    android:background="@android:color/transparent">
+    android:gravity="center">
 
     <ImageView
         android:id="@+id/appIcon"
         android:layout_width="56dp"
         android:layout_height="56dp"
-        android:contentDescription="@string/app_icon"
-        android:scaleType="centerInside" />
+        android:scaleType="centerInside"
+        android:contentDescription="@string/app_icon" />
 
     <TextView
         android:id="@+id/appLabel"
@@ -20,9 +19,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:gravity="center"
+        android:textSize="12sp"
         android:maxLines="1"
         android:ellipsize="end"
-        android:textSize="12sp"
         android:textColor="@color/aura_text" />
 
 </LinearLayout>
