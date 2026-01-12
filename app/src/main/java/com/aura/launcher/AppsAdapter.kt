@@ -8,16 +8,10 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class AppsAdapter(
-    private val items: MutableList<AppInfo>,
+    private var apps: List<AppInfo>,
     private val onClick: (AppInfo) -> Unit,
     private val onLongClick: (AppInfo) -> Boolean
 ) : RecyclerView.Adapter<AppsAdapter.AppViewHolder>() {
-
-    fun updateList(newItems: List<AppInfo>) {
-        items.clear()
-        items.addAll(newItems)
-        notifyDataSetChanged()
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -26,19 +20,24 @@ class AppsAdapter(
     }
 
     override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
-        val app = items[position]
+        val app = apps[position]
+
         holder.icon.setImageDrawable(app.icon)
-        holder.name.text = app.label
+        holder.label.text = app.label   // ✅ ÕIGE
 
         holder.itemView.setOnClickListener { onClick(app) }
         holder.itemView.setOnLongClickListener { onLongClick(app) }
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun getItemCount(): Int = apps.size
+
+    fun updateList(newApps: List<AppInfo>) {
+        apps = newApps
+        notifyDataSetChanged()
+    }
 
     class AppViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val icon: ImageView = view.findViewById(R.id.appIcon)
-        // NB! item_app.xml-s on sul suure tõenäosusega appName (sama mis FavoritesAdapter)
-        val name: TextView = view.findViewById(R.id.appName)
+        val label: TextView = view.findViewById(R.id.appLabel) // ✅ MITTE appName
     }
 }
