@@ -29,7 +29,7 @@ class AppsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.apps_activity)
+        setContentView(R.layout.activity_apps)
 
         appsRecyclerView = findViewById(R.id.appsRecyclerView)
         searchEditText = findViewById(R.id.searchEditText)
