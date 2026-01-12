@@ -1,22 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.aura.launcher">
 
-    <!-- Vajalik, et launcher saaks kõik äpid kätte -->
+    <!-- Vajalik launcherile -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
     <application
+        android:name=".AuraApp"
         android:allowBackup="true"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AuraLauncher">
+        android:theme="@style/Theme.Aura">
 
-        <!-- HOME / LAUNCHER -->
+        <!-- PEALauncher -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:clearTaskOnLaunch="true">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,15 +28,26 @@
             </intent-filter>
         </activity>
 
-        <!-- APPS LIST -->
+        <!-- Apps list -->
         <activity
             android:name=".AppsActivity"
             android:exported="false" />
 
-        <!-- SETTINGS (Dark mode, veerud, animatsioon) -->
+        <!-- Hidden apps -->
+        <activity
+            android:name=".HiddenAppsActivity"
+            android:exported="false" />
+
+        <!-- Settings -->
         <activity
             android:name=".SettingsActivity"
             android:exported="false" />
+
+        <!-- Crash screen -->
+        <activity
+            android:name=".CrashActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Aura" />
 
     </application>
 
