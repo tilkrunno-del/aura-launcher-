@@ -1,13 +1,12 @@
 package com.aura.launcher
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -31,42 +30,39 @@ class AppsActivity : AppCompatActivity() {
 
         recyclerView.layoutManager = GridLayoutManager(this, 4)
 
+        allApps = loadInstalledApps()
+
         adapter = AppsAdapter(
-            items = mutableListOf(),
-            onClick = { app -> openApp(app) },
-            onLongClick = { app ->
-                Toast.makeText(this, app.label, Toast.LENGTH_SHORT).show()
-                true
-            }
+            apps = allApps,
+            onClick = { app -> launchApp(app) },
+            onLongClick = { _ -> false }
         )
+
         recyclerView.adapter = adapter
 
-        allApps = loadInstalledApps()
-        adapter.updateList(allApps)
+        searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                filterApps(s.toString())
+            }
 
-        setupSearch()
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
         clearButton.setOnClickListener {
             searchEditText.text.clear()
-            adapter.updateList(allApps)
-            clearButton.visibility = View.GONE
         }
     }
 
-    private fun setupSearch() {
-        searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val q = s?.toString()?.trim()?.lowercase().orEmpty()
-                val filtered = if (q.isEmpty()) allApps else allApps.filter {
-                    it.label.lowercase().contains(q)
-                }
-                adapter.updateList(filtered)
-                clearButton.visibility = if (q.isNotEmpty()) View.VISIBLE else View.GONE
+    private fun filterApps(query: String) {
+        val filtered = if (query.isBlank()) {
+            allApps
+        } else {
+            allApps.filter {
+                it.label.contains(query, ignoreCase = true)
             }
-
-            override fun afterTextChanged(s: Editable?) {}
-        })
+        }
+        adapter.updateList(filtered)
     }
 
     private fun loadInstalledApps(): List<AppInfo> {
@@ -75,9 +71,8 @@ class AppsActivity : AppCompatActivity() {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }
 
-        val list = pm.queryIntentActivities(intent, 0)
-
-        return list.map {
+        val apps = pm.queryIntentActivities(intent, 0)
+        return apps.map {
             AppInfo(
                 label = it.loadLabel(pm).toString(),
                 packageName = it.activityInfo.packageName,
@@ -87,15 +82,11 @@ class AppsActivity : AppCompatActivity() {
         }.sortedBy { it.label.lowercase() }
     }
 
-    private fun openApp(app: AppInfo) {
-        try {
-            val i = Intent().apply {
-                setClassName(app.packageName, app.className)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            startActivity(i)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Ei saa avada rakendust", Toast.LENGTH_SHORT).show()
+    private fun launchApp(app: AppInfo) {
+        val intent = Intent().apply {
+            setClassName(app.packageName, app.className)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
+        startActivity(intent)
     }
 }
