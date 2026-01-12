@@ -1,40 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Vajalik launcherile -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
     <application
-        android:name=".AuraApp"
         android:allowBackup="true"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
-        android:theme="@style/Theme.Aura">
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AuraLauncher">
 
-        <!-- LAUNCHER -->
+        <!-- PEAMINE LAUNCHER -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+
         </activity>
 
+        <!-- AVA RAKENDUSED -->
         <activity
             android:name=".AppsActivity"
             android:exported="false" />
 
+        <!-- PEIDETUD RAKENDUSED -->
         <activity
             android:name=".HiddenAppsActivity"
             android:exported="false" />
 
+        <!-- SEADED -->
         <activity
             android:name=".SettingsActivity"
             android:exported="false" />
 
+        <!-- CRASH EKRAAN (valikuline, aga nüüd korrektne) -->
         <activity
             android:name=".CrashActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Aura" />
+            android:exported="false" />
 
     </application>
 
