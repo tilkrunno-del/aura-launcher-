@@ -10,12 +10,12 @@ import androidx.recyclerview.widget.RecyclerView
 class AppsAdapter(
     private val items: MutableList<AppInfo>,
     private val onClick: (AppInfo) -> Unit,
-    private val onLongClick: (AppInfo) -> Unit
+    private val onLongClick: (AppInfo) -> Boolean
 ) : RecyclerView.Adapter<AppsAdapter.AppViewHolder>() {
 
-    fun submitList(newList: List<AppInfo>) {
+    fun updateList(newItems: List<AppInfo>) {
         items.clear()
-        items.addAll(newList)
+        items.addAll(newItems)
         notifyDataSetChanged()
     }
 
@@ -27,21 +27,18 @@ class AppsAdapter(
 
     override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
         val app = items[position]
-
         holder.icon.setImageDrawable(app.icon)
-        holder.label.text = app.label
+        holder.name.text = app.label
 
         holder.itemView.setOnClickListener { onClick(app) }
-        holder.itemView.setOnLongClickListener {
-            onLongClick(app)
-            true
-        }
+        holder.itemView.setOnLongClickListener { onLongClick(app) }
     }
 
     override fun getItemCount(): Int = items.size
 
     class AppViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val icon: ImageView = view.findViewById(R.id.appIcon)
-        val label: TextView = view.findViewById(R.id.appLabel)
+        // NB! item_app.xml-s on sul suure tõenäosusega appName (sama mis FavoritesAdapter)
+        val name: TextView = view.findViewById(R.id.appName)
     }
 }
