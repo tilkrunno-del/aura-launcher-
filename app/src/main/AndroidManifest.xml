@@ -51,7 +51,9 @@
         <activity
             android:name=".CrashActivity"
             android:exported="false" />
-
+        <activity
+            android:name=".PinLockActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
