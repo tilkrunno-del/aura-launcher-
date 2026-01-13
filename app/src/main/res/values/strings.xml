@@ -1,28 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- App -->
     <string name="app_name">AURA Launcher</string>
 
-    <string name="open_apps">AVA RAKENDUSED</string>
-    <string name="hidden_apps">PEIDETUD RAKENDUSED</string>
-    <string name="app_actions">App actions</string>
-    <string name="open_app">Open</string>
-    <string name="more_actions_soon">More actions soon</string>
-    <string name="search_apps">Otsi rakendust</string>
+    <!-- General -->
+    <string name="back">Tagasi</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Tühista</string>
+
+    <!-- Search -->
+    <string name="search_apps">Otsi rakendusi</string>
     <string name="clear_search">Tühjenda otsing</string>
 
-    <string name="app_icon">App icon</string>
+    <!-- Apps -->
+    <string name="open_apps">Ava rakendused</string>
+    <string name="hidden_apps">Peidetud rakendused</string>
+    <string name="no_hidden_apps">Peidetud rakendusi pole</string>
 
+    <!-- App actions -->
+    <string name="hide_app">Peida rakendus</string>
+    <string name="restore_app">Taasta rakendus</string>
+    <string name="app_hidden">Rakendus peidetud</string>
+    <string name="app_restored">Rakendus taastatud</string>
+    <string name="cannot_open_app">Rakendust ei saa avada</string>
+
+    <!-- Accessibility -->
+    <string name="app_icon">Rakenduse ikoon</string>
+
+    <!-- Theme / Settings -->
     <string name="theme">Teema</string>
-    <string name="theme_follow_system">Kasuta süsteemi teemat</string>
-    <string name="theme_dark">Tume režiim</string>
+    <string name="use_system_theme">Kasuta süsteemi teemat</string>
+    <string name="dark_mode">Tume režiim</string>
 
-    <!-- Bottom sheet actions -->
-    <string name="aura_open">AVA</string>
-    <string name="aura_app_info">ÄPI INFO</string>
-    <string name="aura_add_favorite">LISA LEMMIKUKS</string>
-    <string name="aura_remove_favorite">EEMALDA LEMMIK</string>
-    <string name="aura_hide_app">PEIDA</string>
-    <string name="aura_show_app">NÄITA</string>
-    <string name="aura_uninstall">EEMALDA</string>
-    <string name="aura_done">VALMIS</string>
 </resources>
