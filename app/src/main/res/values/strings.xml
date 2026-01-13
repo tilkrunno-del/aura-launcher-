@@ -21,6 +21,8 @@
 
     <!-- App actions sheet -->
     <string name="app_actions">Rakenduse toimingud</string>
+<!-- Accessibility / UI -->
+<string name="app_icon">Rakenduse ikoon</string>
     <string name="open_app">Ava</string>
     <string name="aura_open">Ava</string>
     <string name="aura_app_info">Rakenduse info</string>
