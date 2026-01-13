@@ -78,14 +78,6 @@ This is a concept-driven project — clarity matters more than quantity.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
----
-
-## Author
-
-Created by **Runno Tilk**  
-Estonia 🇪🇪
-
-
 ## Features (Prototype)
 
 - Minimal home screen
@@ -98,6 +90,10 @@ More features will be added gradually as the concept matures.
 
 ---
 
+## Author
+
+Created by **Runno Tilk**  
+Estonia 🇪🇪                            
 ## Build APK
 
 You can build the APK using Android Studio:
