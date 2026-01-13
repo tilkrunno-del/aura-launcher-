@@ -1,6 +1,8 @@
 package com.aura.launcher
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.ImageButton
@@ -11,112 +13,104 @@ import androidx.recyclerview.widget.RecyclerView
 
 class HiddenAppsActivity : AppCompatActivity() {
 
-    private lateinit var recyclerView: RecyclerView
+    private lateinit var prefs: SharedPreferences
+    private lateinit var recycler: RecyclerView
     private lateinit var adapter: AppsAdapter
 
-    private val hiddenApps = mutableListOf<AppInfo>()
+    private val hiddenApps = mutableListOf<AppInfo>() // siin on ainult peidetud äpid
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hidden_apps)
 
-        recyclerView = findViewById(R.id.hiddenRecyclerView)
-        val btnBack: ImageButton = findViewById(R.id.btnBack)
+        prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-        recyclerView.layoutManager = GridLayoutManager(this, 4)
+        // tagasi nupp
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
+            finish()
+        }
+
+        recycler = findViewById(R.id.hiddenRecyclerView)
+        recycler.layoutManager = GridLayoutManager(this, 4)
 
         adapter = AppsAdapter(
-            apps = hiddenApps,
+            apps = emptyList(),
             onClick = { app ->
-                // Tavavajutus → käivita app
-                launchApp(app)
+                // klikiga -> taasta (unhide)
+                unhideApp(app.packageName)
+                Toast.makeText(this, "${app.label} taastatud", Toast.LENGTH_SHORT).show()
+                reloadHiddenApps()
             },
-            onLongClick = { app ->
-                // Pikk vajutus → taasta (unhide)
-                unhideApp(app)
+            onLongClick = { _ ->
+                // pole vaja pikka vajutust siin
                 true
             }
         )
 
-        recyclerView.adapter = adapter
+        recycler.adapter = adapter
 
-        btnBack.setOnClickListener {
-            finish()
-        }
-
-        loadHiddenApps()
+        reloadHiddenApps()
     }
 
-    /**
-     * Laeb peidetud äpid SharedPreferences'ist
-     */
-    private fun loadHiddenApps() {
+    override fun onResume() {
+        super.onResume()
+        reloadHiddenApps()
+    }
+
+    private fun reloadHiddenApps() {
         hiddenApps.clear()
 
-        val prefs = getSharedPreferences("hidden_apps", MODE_PRIVATE)
-        val hiddenPackages = prefs.getStringSet("packages", emptySet()) ?: emptySet()
+        val hiddenSet = getHiddenSet()
+        if (hiddenSet.isEmpty()) {
+            adapter.updateList(emptyList())
+            return
+        }
 
         val pm = packageManager
-        val intent = Intent(Intent.ACTION_MAIN, null).apply {
+        val launchIntent = Intent(Intent.ACTION_MAIN).apply {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }
 
-        val allApps = pm.queryIntentActivities(intent, 0)
+        val resolved = pm.queryIntentActivities(launchIntent, PackageManager.MATCH_ALL)
 
-        for (resolveInfo in allApps) {
-            val pkg = resolveInfo.activityInfo.packageName
+        for (ri in resolved) {
+            val pkg = ri.activityInfo.packageName
+            if (!hiddenSet.contains(pkg)) continue
 
-            if (hiddenPackages.contains(pkg)) {
-                val label = resolveInfo.loadLabel(pm).toString()
-                val icon = resolveInfo.loadIcon(pm)
-                val className = resolveInfo.activityInfo.name
+            val label = ri.loadLabel(pm)?.toString() ?: pkg
+            val icon = ri.loadIcon(pm)
+            val className = ri.activityInfo.name ?: ""
 
-                hiddenApps.add(
-                    AppInfo(
-                        label = label,
-                        packageName = pkg,
-                        className = className,
-                        icon = icon
-                    )
+            hiddenApps.add(
+                AppInfo(
+                    label = label,
+                    packageName = pkg,
+                    className = className,
+                    icon = icon
                 )
-            }
+            )
         }
 
         hiddenApps.sortBy { it.label.lowercase() }
-        adapter.updateList(hiddenApps)
+        adapter.updateList(hiddenApps.toList())
     }
 
-    /**
-     * Taastab (unhide) äpi
-     */
-    private fun unhideApp(app: AppInfo) {
-        val prefs = getSharedPreferences("hidden_apps", MODE_PRIVATE)
-        val set = prefs.getStringSet("packages", mutableSetOf())?.toMutableSet()
-            ?: mutableSetOf()
-
-        set.remove(app.packageName)
-
-        prefs.edit()
-            .putStringSet("packages", set)
-            .apply()
-
-        Toast.makeText(this, "Taastatud: ${app.label}", Toast.LENGTH_SHORT).show()
-
-        loadHiddenApps()
+    private fun getHiddenSet(): MutableSet<String> {
+        return prefs.getStringSet(KEY_HIDDEN_SET, emptySet())?.toMutableSet() ?: mutableSetOf()
     }
 
-    /**
-     * Käivitab rakenduse
-     */
-    private fun launchApp(app: AppInfo) {
-        try {
-            val intent = Intent().apply {
-                setClassName(app.packageName, app.className)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Ei saa avada rakendust", Toast.LENGTH_SHORT).show()
-        }
+    private fun saveHiddenSet(set: Set<String>) {
+        prefs.edit().putStringSet(KEY_HIDDEN_SET, set).apply()
+    }
+
+    private fun unhideApp(packageName: String) {
+        val set = getHiddenSet()
+        set.remove(packageName)
+        saveHiddenSet(set)
+    }
+
+    companion object {
+        private const val PREFS_NAME = "aura_launcher_prefs"
+        private const val KEY_HIDDEN_SET = "hidden_apps_set"
     }
 }
