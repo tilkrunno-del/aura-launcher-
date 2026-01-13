@@ -13,56 +13,49 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var prefs: SharedPreferences
 
-    private lateinit var btnOpenApps: Button
+    private lateinit var btnApps: Button
     private lateinit var btnHiddenApps: Button
 
-    private lateinit var switchFollowSystem: Switch
-    private lateinit var switchDarkMode: Switch
+    private lateinit var swFollowSystem: Switch
+    private lateinit var swDark: Switch
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
         prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-
-        // Rakenda teema enne layouti
         applyThemeFromPrefs()
 
+        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        btnOpenApps = findViewById(R.id.btnOpenApps)
+        btnApps = findViewById(R.id.btnApps)
         btnHiddenApps = findViewById(R.id.btnHiddenApps)
 
-        switchFollowSystem = findViewById(R.id.switchFollowSystem)
-        switchDarkMode = findViewById(R.id.switchDarkMode)
+        swFollowSystem = findViewById(R.id.swFollowSystem)
+        swDark = findViewById(R.id.swDark)
 
-        setupButtons()
-        setupThemeSwitches()
+        btnApps.setOnClickListener {
+            startActivity(Intent(this, AppsActivity::class.java))
+        }
+
+        // Kui sul on PIN-lukk, kasuta seda. Kui ei ole, vaheta HiddenAppsActivity peale.
+        btnHiddenApps.setOnClickListener {
+            // startActivity(Intent(this, HiddenAppsActivity::class.java))
+            startActivity(Intent(this, PinLockActivity::class.java))
+        }
+
+        setupSwitches()
     }
 
     override fun onResume() {
         super.onResume()
-        // Kui keegi muutis teemat mujal, sünkrooni lülitid
-        syncSwitchStates()
+        syncSwitches()
     }
 
-    private fun setupButtons() {
-        btnOpenApps.setOnClickListener {
-            startActivity(Intent(this, AppsActivity::class.java))
-        }
+    private fun setupSwitches() {
+        syncSwitches()
 
-        // PIN-lukk enne peidetud rakendusi
-        btnHiddenApps.setOnClickListener {
-            startActivity(Intent(this, PinLockActivity::class.java))
-        }
-    }
-
-    private fun setupThemeSwitches() {
-        syncSwitchStates()
-
-        switchFollowSystem.setOnCheckedChangeListener { _, isChecked ->
+        swFollowSystem.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean(KEY_FOLLOW_SYSTEM, isChecked).apply()
 
-            // Kui follow system ON -> dark switch ei määra midagi (võib olla disable)
             if (isChecked) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             } else {
@@ -72,11 +65,10 @@ class MainActivity : AppCompatActivity() {
                 )
             }
 
-            // värskenda UI
-            syncSwitchStates()
+            syncSwitches()
         }
 
-        switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
+        swDark.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean(KEY_DARK_MODE, isChecked).apply()
 
             val follow = prefs.getBoolean(KEY_FOLLOW_SYSTEM, true)
@@ -86,31 +78,30 @@ class MainActivity : AppCompatActivity() {
                 )
             }
 
-            // värskenda UI
-            syncSwitchStates()
+            syncSwitches()
         }
     }
 
-    private fun syncSwitchStates() {
+    private fun syncSwitches() {
         val follow = prefs.getBoolean(KEY_FOLLOW_SYSTEM, true)
         val dark = prefs.getBoolean(KEY_DARK_MODE, false)
 
-        // Et vältida “loopi”, eemalda listenerid korraks
-        switchFollowSystem.setOnCheckedChangeListener(null)
-        switchDarkMode.setOnCheckedChangeListener(null)
+        // vältida "loopi"
+        swFollowSystem.setOnCheckedChangeListener(null)
+        swDark.setOnCheckedChangeListener(null)
 
-        switchFollowSystem.isChecked = follow
-        switchDarkMode.isChecked = dark
+        swFollowSystem.isChecked = follow
+        swDark.isChecked = dark
 
-        // Kui follow system ON, siis dark toggle disable (sul oli pildil hall)
-        switchDarkMode.isEnabled = !follow
+        // follow system ON -> dark lüliti disabled (nagu su pildil)
+        swDark.isEnabled = !follow
 
-        // Pane listenerid tagasi
-        setupThemeSwitchListenersAgain()
+        // pane listenerid tagasi
+        setupSwitchesListenersAgain()
     }
 
-    private fun setupThemeSwitchListenersAgain() {
-        switchFollowSystem.setOnCheckedChangeListener { _, isChecked ->
+    private fun setupSwitchesListenersAgain() {
+        swFollowSystem.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean(KEY_FOLLOW_SYSTEM, isChecked).apply()
 
             if (isChecked) {
@@ -122,10 +113,10 @@ class MainActivity : AppCompatActivity() {
                 )
             }
 
-            syncSwitchStates()
+            syncSwitches()
         }
 
-        switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
+        swDark.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean(KEY_DARK_MODE, isChecked).apply()
 
             val follow = prefs.getBoolean(KEY_FOLLOW_SYSTEM, true)
@@ -135,7 +126,7 @@ class MainActivity : AppCompatActivity() {
                 )
             }
 
-            syncSwitchStates()
+            syncSwitches()
         }
     }
 
@@ -144,11 +135,9 @@ class MainActivity : AppCompatActivity() {
         val dark = prefs.getBoolean(KEY_DARK_MODE, false)
 
         AppCompatDelegate.setDefaultNightMode(
-            if (follow) {
-                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-            } else {
-                if (dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
-            }
+            if (follow) AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            else if (dark) AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
         )
     }
 
