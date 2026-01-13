@@ -2,52 +2,45 @@ package com.aura.launcher
 
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.ImageButton
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Locale
 
 class HiddenAppsActivity : AppCompatActivity() {
 
-    private lateinit var prefs: SharedPreferences
-    private lateinit var recycler: RecyclerView
+    private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: AppsAdapter
 
-    private val hiddenApps = mutableListOf<AppInfo>() // siin on ainult peidetud äpid
+    private val hiddenApps = mutableListOf<AppInfo>()
+
+    // Sama prefs + key mis AppsActivity patchis
+    private val prefs by lazy { getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hidden_apps)
 
-        prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        // Back
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
 
-        // tagasi nupp
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
-            finish()
-        }
-
-        recycler = findViewById(R.id.hiddenRecyclerView)
-        recycler.layoutManager = GridLayoutManager(this, 4)
+        recyclerView = findViewById(R.id.hiddenRecyclerView)
+        recyclerView.layoutManager = GridLayoutManager(this, 4)
 
         adapter = AppsAdapter(
             apps = emptyList(),
-            onClick = { app ->
-                // klikiga -> taasta (unhide)
-                unhideApp(app.packageName)
-                Toast.makeText(this, "${app.label} taastatud", Toast.LENGTH_SHORT).show()
-                reloadHiddenApps()
-            },
-            onLongClick = { _ ->
-                // pole vaja pikka vajutust siin
+            onClick = { app -> openApp(app) },
+            onLongClick = { app ->
+                confirmRestore(app)
                 true
             }
         )
-
-        recycler.adapter = adapter
+        recyclerView.adapter = adapter
 
         reloadHiddenApps()
     }
@@ -67,11 +60,8 @@ class HiddenAppsActivity : AppCompatActivity() {
         }
 
         val pm = packageManager
-        val launchIntent = Intent(Intent.ACTION_MAIN).apply {
-            addCategory(Intent.CATEGORY_LAUNCHER)
-        }
-
-        val resolved = pm.queryIntentActivities(launchIntent, PackageManager.MATCH_ALL)
+        val intent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) }
+        val resolved = pm.queryIntentActivities(intent, PackageManager.MATCH_ALL)
 
         for (ri in resolved) {
             val pkg = ri.activityInfo.packageName
@@ -91,22 +81,48 @@ class HiddenAppsActivity : AppCompatActivity() {
             )
         }
 
-        hiddenApps.sortBy { it.label.lowercase() }
+        hiddenApps.sortBy { it.label.lowercase(Locale.getDefault()) }
         adapter.updateList(hiddenApps.toList())
     }
 
-    private fun getHiddenSet(): MutableSet<String> {
-        return prefs.getStringSet(KEY_HIDDEN_SET, emptySet())?.toMutableSet() ?: mutableSetOf()
+    private fun openApp(app: AppInfo) {
+        try {
+            // Turvaline avamine: className abil (kui getLaunchIntent on null, see töötab tihti paremini)
+            val i = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_LAUNCHER)
+                setClassName(app.packageName, app.className)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(i)
+        } catch (_: Exception) {
+            // fallback
+            val fallback = packageManager.getLaunchIntentForPackage(app.packageName)
+            if (fallback != null) startActivity(fallback)
+            else Toast.makeText(this, getString(R.string.cannot_open_app), Toast.LENGTH_SHORT).show()
+        }
     }
 
-    private fun saveHiddenSet(set: Set<String>) {
+    private fun confirmRestore(app: AppInfo) {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.restore_app))
+            .setMessage("Kas soovid “${app.label}” tagasi nähtavaks teha?")
+            .setPositiveButton(getString(R.string.ok)) { _, _ ->
+                restoreApp(app.packageName)
+                Toast.makeText(this, "${app.label} taastatud", Toast.LENGTH_SHORT).show()
+                reloadHiddenApps()
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
+    }
+
+    private fun restoreApp(packageName: String) {
+        val set = getHiddenSet().toMutableSet()
+        set.remove(packageName)
         prefs.edit().putStringSet(KEY_HIDDEN_SET, set).apply()
     }
 
-    private fun unhideApp(packageName: String) {
-        val set = getHiddenSet()
-        set.remove(packageName)
-        saveHiddenSet(set)
+    private fun getHiddenSet(): Set<String> {
+        return prefs.getStringSet(KEY_HIDDEN_SET, emptySet())?.toSet() ?: emptySet()
     }
 
     companion object {
