@@ -38,5 +38,9 @@
     <!-- Generic -->
     <string name="ok">OK</string>
     <string name="cancel">Loobu</string>
-
+<string name="set_pin_title">Sea PIN peidetud rakendustele</string>
+<string name="enter_pin_title">Sisesta PIN</string>
+<string name="pin_too_short">PIN peab olema vähemalt 4 numbrit</string>
+<string name="pin_wrong">Vale PIN</string>
+<string name="pin_set_ok">PIN salvestatud</string>
 </resources>
