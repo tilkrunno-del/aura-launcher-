@@ -1,168 +1,165 @@
 package com.aura.launcher
 
-import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Typeface
 import android.os.Bundle
-import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.ImageButton
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class HiddenAppsActivity : AppCompatActivity() {
 
-    private val prefs by lazy { getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
+    companion object {
+        // PEAB ühtima AppsActivity-ga
+        const val PREFS_NAME = "aura_prefs"
+        const val KEY_HIDDEN_APPS = "hidden_apps"
+    }
+
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var btnBack: ImageButton
+    private lateinit var adapter: HiddenAppsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hidden_apps)
 
-        // Back nupp (sinu XML-is olemas)
-        findViewById<View>(R.id.btnBack)?.setOnClickListener { finish() }
+        btnBack = findViewById(R.id.btnBack)
+        recyclerView = findViewById(R.id.hiddenRecyclerView)
 
-        val recycler = findViewById<RecyclerView>(R.id.hiddenRecyclerView)
-        recycler.layoutManager = LinearLayoutManager(this)
-        recycler.setHasFixedSize(true)
-
-        val hidden = HiddenStore.getAll(prefs).toMutableList()
-        val adapter = HiddenAdapter(
-            items = hidden,
-            pm = packageManager,
-            onRestore = { component ->
-                HiddenStore.unhide(prefs, component)
-                val idx = hidden.indexOf(component)
-                if (idx >= 0) {
-                    hidden.removeAt(idx)
-                    recycler.adapter?.notifyItemRemoved(idx)
-                }
-                Toast.makeText(this, getString(R.string.restore_app), Toast.LENGTH_SHORT).show()
-                if (hidden.isEmpty()) finish()
-            }
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        adapter = HiddenAppsAdapter(
+            items = emptyList(),
+            onRestoreClick = { app -> confirmRestore(app) },
+            onOpenClick = { app -> openApp(app) }
         )
-        recycler.adapter = adapter
+        recyclerView.adapter = adapter
+
+        btnBack.setOnClickListener { finish() }
     }
 
-    private class HiddenAdapter(
-        private val items: List<String>,
-        private val pm: PackageManager,
-        private val onRestore: (String) -> Unit
-    ) : RecyclerView.Adapter<HiddenAdapter.VH>() {
+    override fun onResume() {
+        super.onResume()
+        loadHiddenApps()
+    }
 
-        class VH(val root: LinearLayout) : RecyclerView.ViewHolder(root) {
-            val icon: ImageView = root.getChildAt(0) as ImageView
-            val texts: LinearLayout = root.getChildAt(1) as LinearLayout
-            val title: TextView = texts.getChildAt(0) as TextView
-            val subtitle: TextView = texts.getChildAt(1) as TextView
-            val btn: Button = root.getChildAt(2) as Button
+    private fun loadHiddenApps() {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val hiddenPackages = prefs.getStringSet(KEY_HIDDEN_APPS, emptySet()) ?: emptySet()
+
+        val pm = packageManager
+        val apps = mutableListOf<AppInfo>()
+
+        // NB! Ära kasuta queryIntentActivities siinsamas,
+        // muidu mõned süsteemi äpid võivad "kaduda".
+        for (pkg in hiddenPackages) {
+            try {
+                val launchIntent = pm.getLaunchIntentForPackage(pkg) ?: continue
+                val ri = pm.resolveActivity(launchIntent, 0) ?: continue
+                val ai = pm.getApplicationInfo(pkg, 0)
+
+                apps.add(
+                    AppInfo(
+                        label = pm.getApplicationLabel(ai).toString(),
+                        packageName = pkg,
+                        className = ri.activityInfo.name,
+                        icon = pm.getApplicationIcon(ai)
+                    )
+                )
+            } catch (_: Exception) {
+                // ignore (pakett eemaldatud vms)
+            }
+        }
+
+        apps.sortBy { it.label.lowercase() }
+        adapter.update(apps)
+
+        if (apps.isEmpty()) {
+            Toast.makeText(this, getString(R.string.hidden_apps) + ": 0", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun confirmRestore(app: AppInfo) {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.restore_app))
+            .setMessage(app.label)
+            .setPositiveButton(getString(R.string.ok)) { _, _ ->
+                restoreApp(app.packageName)
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
+    }
+
+    private fun restoreApp(packageName: String) {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val set = prefs.getStringSet(KEY_HIDDEN_APPS, emptySet())?.toMutableSet() ?: mutableSetOf()
+
+        if (set.remove(packageName)) {
+            prefs.edit().putStringSet(KEY_HIDDEN_APPS, set).apply()
+            loadHiddenApps()
+            Toast.makeText(this, getString(R.string.restore_app), Toast.LENGTH_SHORT).show()
+        } else {
+            // midagi polnud eemaldada
+            Toast.makeText(this, getString(R.string.ok), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun openApp(app: AppInfo) {
+        try {
+            val pm = packageManager
+            val intent = pm.getLaunchIntentForPackage(app.packageName)
+            if (intent == null) {
+                Toast.makeText(this, getString(R.string.cannot_open_app), Toast.LENGTH_SHORT).show()
+                return
+            }
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(this, getString(R.string.cannot_open_app), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // ---------------- Adapter ----------------
+
+    private class HiddenAppsAdapter(
+        private var items: List<AppInfo>,
+        private val onRestoreClick: (AppInfo) -> Unit,
+        private val onOpenClick: (AppInfo) -> Unit
+    ) : RecyclerView.Adapter<HiddenAppsAdapter.VH>() {
+
+        fun update(newItems: List<AppInfo>) {
+            items = newItems
+            notifyDataSetChanged()
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-            val ctx = parent.context
-
-            val row = LinearLayout(ctx).apply {
-                orientation = LinearLayout.HORIZONTAL
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-                setPadding(dp(ctx, 12), dp(ctx, 10), dp(ctx, 12), dp(ctx, 10))
-            }
-
-            val icon = ImageView(ctx).apply {
-                layoutParams = LinearLayout.LayoutParams(dp(ctx, 44), dp(ctx, 44))
-            }
-
-            val texts = LinearLayout(ctx).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                    marginStart = dp(ctx, 12)
-                    marginEnd = dp(ctx, 12)
-                }
-            }
-
-            val title = TextView(ctx).apply {
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-                setTypeface(typeface, Typeface.BOLD)
-            }
-
-            val subtitle = TextView(ctx).apply {
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-                alpha = 0.7f
-            }
-
-            val btn = Button(ctx).apply {
-                text = ctx.getString(R.string.restore_app)
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-            }
-
-            texts.addView(title)
-            texts.addView(subtitle)
-
-            row.addView(icon)
-            row.addView(texts)
-            row.addView(btn)
-
-            return VH(row)
+            val view = LayoutInflater.from(parent.context)
+                .inflate(android.R.layout.simple_list_item_2, parent, false)
+            return VH(view)
         }
 
         override fun onBindViewHolder(holder: VH, position: Int) {
-            val component = items[position]
-            val (pkg, cls) = splitComponent(component)
+            val app = items[position]
+            holder.title.text = app.label
+            holder.subtitle.text = app.packageName
 
-            // Label + icon turvaliselt
-            try {
-                val ai = pm.getApplicationInfo(pkg, 0)
-                holder.title.text = pm.getApplicationLabel(ai)?.toString() ?: pkg
-                holder.icon.setImageDrawable(pm.getApplicationIcon(ai))
-            } catch (_: Exception) {
-                holder.title.text = pkg
-                holder.icon.setImageResource(android.R.drawable.sym_def_app_icon)
+            holder.itemView.setOnClickListener { onOpenClick(app) }
+            holder.itemView.setOnLongClickListener {
+                onRestoreClick(app)
+                true
             }
-
-            holder.subtitle.text = cls ?: pkg
-
-            holder.btn.setOnClickListener { onRestore(component) }
         }
 
         override fun getItemCount(): Int = items.size
 
-        private fun splitComponent(s: String): Pair<String, String?> {
-            val idx = s.indexOf('/')
-            return if (idx <= 0) s to null else s.substring(0, idx) to s.substring(idx + 1)
+        class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val title: TextView = itemView.findViewById(android.R.id.text1)
+            val subtitle: TextView = itemView.findViewById(android.R.id.text2)
         }
-
-        private fun dp(ctx: Context, v: Int): Int =
-            (v * ctx.resources.displayMetrics.density).toInt()
-    }
-
-    object HiddenStore {
-        fun getAll(prefs: android.content.SharedPreferences): Set<String> =
-            prefs.getStringSet(KEY, emptySet()) ?: emptySet()
-
-        fun hide(prefs: android.content.SharedPreferences, component: String) {
-            val set = getAll(prefs).toMutableSet()
-            set.add(component)
-            prefs.edit().putStringSet(KEY, set).apply()
-        }
-
-        fun unhide(prefs: android.content.SharedPreferences, component: String) {
-            val set = getAll(prefs).toMutableSet()
-            set.remove(component)
-            prefs.edit().putStringSet(KEY, set).apply()
-        }
-
-        fun isHidden(prefs: android.content.SharedPreferences, component: String): Boolean =
-            getAll(prefs).contains(component)
-    }
-
-    companion object {
-        private const val PREFS = "aura_prefs"
-        private const val KEY = "hidden_components"
     }
 }
