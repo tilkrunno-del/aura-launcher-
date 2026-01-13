@@ -8,6 +8,9 @@
     <string name="back">Tagasi</string>
 
     <!-- Main screen -->
+<!-- Apps screen -->
+<string name="search_apps">Otsi rakendusi</string>
+<string name="clear_search">Tühjenda otsing</string>
     <string name="open_apps">Ava rakendused</string>
     <string name="hidden_apps">Peidetud rakendused</string>
 
